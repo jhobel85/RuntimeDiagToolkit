@@ -211,7 +211,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
  [x] Build platform dispatcher (DI-friendly factory)
  [x] Create DiagnosticsToolkit.AspNetCore package
  [x] Implement Windows metrics provider (ETW + Process)
- [] Implement Linux metrics provider (/proc + cgroup v2)
+[x] Implement Linux metrics provider (/proc + cgroup v2)
  [] Implement macOS/iOS provider (unified logging + memory pressure)
  [] Implement Android metrics provider (ADB + Java interop)
  [] Create DiagnosticsToolkit.Maui package
@@ -232,7 +232,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
 
 ## Project summary
 
-- Cross-platform (Win, Linux, Mac, Android, iOS, ..) diagnostics library with unified `IRuntimeMetricsProvider` and platform-specific providers. 
+- Cross-platform (Win, Linux, macOS, Android, iOS, ..) diagnostics library with unified `IRuntimeMetricsProvider` and platform-specific providers. 
 UseCases:
 - Performance Monitoring & Diagnostics: ASP.NET Core package exposes a minimal diagnostics endpoint for quick integration.
 -  Benchmarking & Profiling: Benchmark suite (BenchmarkDotNet) measures call overhead for CPU, memory, GC, and thread pool metrics. Helps developers measure runtime behavior under load and identify bottlenecks without significant overhead.
@@ -241,7 +241,7 @@ UseCases:
 ## ASP.NET Core sample
 
 - Sample project: [DiagnosticsToolkit.Sample](DiagnosticsToolkit.Sample/Program.cs)
-- Run locally:
+- Run locally (Windows or Linux):
 	- ```bash
 		cd DiagnosticsToolkit.Sample
 		dotnet run
@@ -252,11 +252,17 @@ UseCases:
 
 ## ASP.NET Benchmark
 
-Run benchmarks (Windows target for full metrics):
-	- ```bash
-		cd DiagnosticsToolkit.Benchmarks
-		dotnet run -c Release -f net8.0-windows
-		```
+Run benchmarks:
+	- On Linux/macOS: use the cross-platform target
+		- ```bash
+			cd DiagnosticsToolkit.Benchmarks
+			dotnet run -c Release -f net8.0
+			```
+	- On Windows: prefer the Windows target to include OS-specific metrics
+		- ```bash
+			cd DiagnosticsToolkit.Benchmarks
+			dotnet run -c Release -f net8.0-windows
+			```
 
 Example of the result
 

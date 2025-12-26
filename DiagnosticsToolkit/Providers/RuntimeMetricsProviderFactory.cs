@@ -43,7 +43,7 @@ public static class RuntimeMetricsProviderFactory
 
     private static IRuntimeMetricsProvider CreateLinuxProvider()
     {
-        throw new NotImplementedException("Linux provider is not yet implemented.");
+        return new Platforms.DefaultLinuxMetricsProvider();
     }
 
     private static IRuntimeMetricsProvider CreateMacOsProvider()
