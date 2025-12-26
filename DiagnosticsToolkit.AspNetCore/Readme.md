@@ -1,8 +1,8 @@
 the ASP.NET Core project adds a Microsoft.AspNetCore.App framework reference and web dependencies by design (web integration)
 
-**Examples where DiagnosticToolkit.AspNetCore can be used/referenced**
+**Samples where DiagnosticToolkit.AspNetCore can be used/referenced**
 
-**API: add DI + diagnostics endpoint (sample: DiagnosticsToolkit.AspNetCore.API)**
+**API: add DI + diagnostics endpoint (DiagnosticsToolkit.AspNetCore.Sample.API)**
 Code:
 builder.Services.AddDiagnosticsToolkit();
 var app = builder.Build();

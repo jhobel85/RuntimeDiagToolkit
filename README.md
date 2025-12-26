@@ -238,21 +238,40 @@ UseCases:
 -  Benchmarking & Profiling: Benchmark suite (BenchmarkDotNet) measures call overhead for CPU, memory, GC, and thread pool metrics. Helps developers measure runtime behavior under load and identify bottlenecks without significant overhead.
 - Production Health Checks: Lightweight enough to run periodically in live systems for telemetry and alerting without impacting performance. 
 
-## ASP.NET Core API
+## ASP.NET Core Samples
+
+### Minimal API Sample
 
 - Project: [DiagnosticsToolkit.AspNetCore.Sample.API](DiagnosticsToolkit.AspNetCore.Sample.API/Program.cs)
+- Use Case: Lightweight, high-throughput scenarios with minimal API endpoints.
 - Run locally (Windows, Linux or macOS):
 	- ```bash
 		cd DiagnosticsToolkit.AspNetCore.Sample.API
 		dotnet run
 		```
-- Run on Android: publish the API for Android and host it inside your app (MAUI package is pending).
-	- ```bash
-		dotnet publish DiagnosticsToolkit.AspNetCore.Sample.API/DiagnosticsToolkit.AspNetCore.Sample.API.csproj -f net8.0-android -c Release
-		```
 - Endpoints:
 	- Root: `/` → simple health text
 	- Metrics: `/_diagnostics/runtime` → CPU, memory, GC, thread pool metrics as JSON
+- Publish on Android:
+	- ```bash
+		dotnet publish DiagnosticsToolkit.AspNetCore.Sample.API/DiagnosticsToolkit.AspNetCore.Sample.API.csproj -f net8.0-android -c Release
+		```
+
+### MVC Sample
+
+- Project: [DiagnosticsToolkit.AspNetCore.Sample.MVC](DiagnosticsToolkit.AspNetCore.Sample.MVC/Controllers/HomeController.cs)
+- Use Case: Traditional MVC applications with UI dashboard for viewing runtime metrics.
+- Run locally (Windows, Linux or macOS):
+	- ```bash
+		cd DiagnosticsToolkit.AspNetCore.Sample.MVC
+		dotnet run
+		```
+- View: Open `https://localhost:7048` in your browser to see the diagnostics dashboard.
+- Features:
+	- Real-time CPU, memory, GC, and thread pool metrics displayed in a responsive Bootstrap dashboard.
+	- Home page shows live system diagnostics.
+	- Privacy page for standard policies.
+
 
 ## .NET MAUI
 

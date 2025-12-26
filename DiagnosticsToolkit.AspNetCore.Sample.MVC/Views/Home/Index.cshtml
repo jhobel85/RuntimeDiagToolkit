@@ -1,0 +1,80 @@
+@model DiagnosticsToolkit.AspNetCore.Sample.MVC.Controllers.DiagnosticsViewModel
+
+@{
+    ViewData["Title"] = "Runtime Diagnostics";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Runtime Diagnostics</h1>
+    <p>Live metrics from DiagnosticsToolkit</p>
+</div>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">CPU</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Usage:</strong> @Model.CpuUsagePercent.ToString("F2")%</p>
+                    <p><strong>Processors:</strong> @Model.ProcessorCount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Memory</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Used:</strong> @Model.MemoryUsedMB.ToString("F2") MB</p>
+                    <p><strong>Total:</strong> @Model.MemoryTotalMB.ToString("F2") MB</p>
+                    <p><strong>Pressure:</strong> @Model.MemoryPressure</p>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: @((Model.MemoryUsedMB / Model.MemoryTotalMB * 100).ToString("F0"))%"
+                             aria-valuenow="@Model.MemoryUsedMB.ToString("F0")" 
+                             aria-valuemin="0" 
+                             aria-valuemax="@Model.MemoryTotalMB.ToString("F0")">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Garbage Collection</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Gen0 Collections:</strong> @Model.Gen0Collections</p>
+                    <p><strong>Gen1 Collections:</strong> @Model.Gen1Collections</p>
+                    <p><strong>Gen2 Collections:</strong> @Model.Gen2Collections</p>
+                    <p><strong>GC Pause %:</strong> @Model.GcTotalPauseMsPercent.ToString("F4")%</p>
+                    <p><strong>Heap Fragmentation:</strong> @Model.HeapFragmentationPercent.ToString("F2")%</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Thread Pool</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Worker Threads:</strong> @Model.ThreadPoolWorkerThreads</p>
+                    <p><strong>IO Threads:</strong> @Model.ThreadPoolIOThreads</p>
+                    <p><strong>Queued Items:</strong> @Model.ThreadPoolQueuedWorkItems</p>
+                    <p><strong>Completed Items:</strong> @Model.ThreadPoolCompletedItems</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="/" class="btn btn-primary">Refresh</a>
+    </div>
+</div>
