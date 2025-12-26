@@ -214,7 +214,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
 [x] Implement Linux metrics provider (/proc + cgroup v2)
 [x] Implement macOS/iOS provider (process + sysctl + vm_statistics64 for memory pressure)
 [x] Implement Android metrics provider (/proc sampling + runtime counters)
- [] Create DiagnosticsToolkit.Maui package
+[x] Create DiagnosticsToolkit.Maui package
  [] Roslyn source generator for collectors
  [] Performance hardening (allocation-free, spans)
  [] BenchmarkDotNet suite (CPU, Memory, GC)
@@ -240,19 +240,32 @@ UseCases:
 
 ## ASP.NET Core sample
 
-- Sample project: [DiagnosticsToolkit.Sample](DiagnosticsToolkit.Sample/Program.cs)
+- Sample project: [DiagnosticsToolkit.AspNetCore.Sample](DiagnosticsToolkit.AspNetCore.Sample/Program.cs)
 - Run locally (Windows, Linux or macOS):
 	- ```bash
-		cd DiagnosticsToolkit.Sample
+		cd DiagnosticsToolkit.AspNetCore.Sample
 		dotnet run
 		```
 - Run on Android: publish the sample for Android and host it inside your app (MAUI package is pending).
 	- ```bash
-		dotnet publish DiagnosticsToolkit.Sample/DiagnosticsToolkit.Sample.csproj -f net8.0-android -c Release
+		dotnet publish DiagnosticsToolkit.AspNetCore.Sample/DiagnosticsToolkit.AspNetCore.Sample.csproj -f net8.0-android -c Release
 		```
 - Endpoints:
 	- Root: `/` → simple health text
 	- Metrics: `/_diagnostics/runtime` → CPU, memory, GC, thread pool metrics as JSON
+
+## .NET MAUI
+
+- Package: DiagnosticsToolkit.Maui
+- Register in `MauiProgram.cs`:
+	- ```csharp
+		var builder = MauiApp.CreateBuilder();
+		builder
+		    .UseMauiApp<App>()
+		    .UseDiagnosticsToolkit();
+		return builder.Build();
+		```
+- Targets: net8.0-android, net8.0-ios, net8.0-maccatalyst
 
 ## ASP.NET Benchmark
 
