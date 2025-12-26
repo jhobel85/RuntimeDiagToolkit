@@ -184,11 +184,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
 
 &nbsp; - Cross‑team design syncs
 
-
-
 ---
-
-
 
 **## Deliverables**
 
@@ -211,19 +207,19 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
  [x] Build platform dispatcher (DI-friendly factory)
  [x] Create DiagnosticsToolkit.AspNetCore package
  [x] Implement Windows metrics provider (ETW + Process)
-[x] Implement Linux metrics provider (/proc + cgroup v2)
-[x] Implement macOS/iOS provider (process + sysctl + vm_statistics64 for memory pressure)
-[x] Implement Android metrics provider (/proc sampling + runtime counters)
-[x] Create DiagnosticsToolkit.Maui package
-[x] BenchmarkDotNet suite (CPU, Memory, GC, ThreadPool)
-[x] Cross-platform unit tests (xUnit)
-[x] GitHub Actions CI workflow (Windows, Linux, macOS)
+ [x] Implement Linux metrics provider (/proc + cgroup v2)
+ [x] Implement macOS/iOS provider (process + sysctl + vm_statistics64 for memory pressure)
+ [x] Implement Android metrics provider (/proc sampling + runtime counters)
+ [x] Create DiagnosticsToolkit.Maui package
+ [x] BenchmarkDotNet suite (CPU, Memory, GC, ThreadPool)
+ [x] Cross-platform unit tests (xUnit)
+ [x] GitHub Actions CI workflow (Windows, Linux, macOS)
  [] Roslyn source generator for collectors
  [] Performance hardening (allocation-free, spans)
  [] Optimize mobile implementations (battery, GC, background)
- [] AI diagnostics analyzer (issue detection + suggestions)
- [] CLI: diagnostics-ai analyze --input metrics.json
- [] AI-generated guidance (samples, integrations, troubleshooting)
+ [x] AI diagnostics analyzer (issue detection + suggestions)
+ [x] CLI: diagnostics-ai analyze --input metrics.json
+ [x] AI-generated guidance (samples, integrations, troubleshooting)
  [] CI benchmark regression gate
  [] Open-source repo setup (guides, docs, templates)
  [] Documentation & samples
