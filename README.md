@@ -212,7 +212,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
  [x] Create DiagnosticsToolkit.AspNetCore package
  [x] Implement Windows metrics provider (ETW + Process)
 [x] Implement Linux metrics provider (/proc + cgroup v2)
- [] Implement macOS/iOS provider (unified logging + memory pressure)
+[x] Implement macOS/iOS provider (process + sysctl baseline; memory pressure TBD)
  [] Implement Android metrics provider (ADB + Java interop)
  [] Create DiagnosticsToolkit.Maui package
  [] Roslyn source generator for collectors

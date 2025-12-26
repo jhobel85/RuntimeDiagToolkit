@@ -48,7 +48,7 @@ public static class RuntimeMetricsProviderFactory
 
     private static IRuntimeMetricsProvider CreateMacOsProvider()
     {
-        throw new NotImplementedException("macOS provider is not yet implemented.");
+        return new Platforms.DefaultAppleMetricsProvider();
     }
 
     private static IRuntimeMetricsProvider CreateAndroidProvider()
@@ -58,6 +58,6 @@ public static class RuntimeMetricsProviderFactory
 
     private static IRuntimeMetricsProvider CreateIosProvider()
     {
-        throw new NotImplementedException("iOS provider is not yet implemented.");
+        return new Platforms.DefaultAppleMetricsProvider();
     }
 }
