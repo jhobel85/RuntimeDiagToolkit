@@ -1,0 +1,62 @@
+name: .NET Cross-Platform CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        dotnet-version: ['8.x']
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+
+    - name: Restore dependencies
+      run: dotnet restore RuntimeDiagToolkit.sln
+
+    - name: Build
+      run: dotnet build RuntimeDiagToolkit.sln --configuration Release --no-restore
+
+    - name: Run Tests
+      run: dotnet test DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-build --verbosity normal
+
+    - name: Run Benchmarks (Release, Windows only)
+      if: matrix.os == 'windows-latest'
+      run: dotnet run --project DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj --configuration Release --framework net8.0-windows
+
+    - name: Run Benchmarks (Release, Non-Windows)
+      if: matrix.os != 'windows-latest'
+      run: dotnet run --project DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj --configuration Release --framework net8.0
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.x'
+
+    - name: Restore dependencies
+      run: dotnet restore RuntimeDiagToolkit.sln
+
+    - name: Build
+      run: dotnet build RuntimeDiagToolkit.sln --configuration Release --no-restore
+
+    - name: Check for unused using statements
+      run: |
+        dotnet build RuntimeDiagToolkit.sln --configuration Release -p:EnforceCodeStyleInBuild=true

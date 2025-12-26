@@ -215,14 +215,15 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
 [x] Implement macOS/iOS provider (process + sysctl + vm_statistics64 for memory pressure)
 [x] Implement Android metrics provider (/proc sampling + runtime counters)
 [x] Create DiagnosticsToolkit.Maui package
+[x] BenchmarkDotNet suite (CPU, Memory, GC, ThreadPool)
+[x] Cross-platform unit tests (xUnit)
+[x] GitHub Actions CI workflow (Windows, Linux, macOS)
  [] Roslyn source generator for collectors
  [] Performance hardening (allocation-free, spans)
- [] BenchmarkDotNet suite (CPU, Memory, GC)
  [] Optimize mobile implementations (battery, GC, background)
  [] AI diagnostics analyzer (issue detection + suggestions)
  [] CLI: diagnostics-ai analyze --input metrics.json
  [] AI-generated guidance (samples, integrations, troubleshooting)
- [] Cross-platform tests & harnesses (GH Actions + MAUI)
  [] CI benchmark regression gate
  [] Open-source repo setup (guides, docs, templates)
  [] Documentation & samples
@@ -286,25 +287,23 @@ UseCases:
 		```
 - Targets: net8.0-android, net8.0-ios, net8.0-maccatalyst
 
-## ASP.NET Benchmark
+## Benchmarking
+
+### Performance Metrics
 
 Run benchmarks:
-	- On Linux/macOS: use the cross-platform target
-		- ```bash
-			cd DiagnosticsToolkit.Benchmarks
-			dotnet run -c Release -f net8.0
-			```
-	- On Windows: prefer the Windows target to include OS-specific metrics
-		- ```bash
-			cd DiagnosticsToolkit.Benchmarks
-			dotnet run -c Release -f net8.0-windows
-			```
-	- On Android: publish for Android, then invoke benchmarks within your Android host (no standalone console runner on device).
-		- ```bash
-			dotnet publish DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj -f net8.0-android -c Release
-			```
+- On Linux/macOS: use the cross-platform target
+	- ```bash
+		cd DiagnosticsToolkit.Benchmarks
+		dotnet run -c Release -f net8.0
+		```
+- On Windows: prefer the Windows target to include OS-specific metrics
+	- ```bash
+		cd DiagnosticsToolkit.Benchmarks
+		dotnet run -c Release -f net8.0-windows
+		```
 
-Example of the result
+Example baseline results (may vary by hardware):
 
 | Method          | Mean            | Error          | StdDev        |
 |---------------- |----------------:|---------------:|--------------:|
@@ -313,7 +312,36 @@ Example of the result
 | GcStats         |       120.67 ns |       5.626 ns |      0.871 ns |
 | ThreadPoolStats |        80.54 ns |      13.930 ns |      3.618 ns |
 
-CpuUsage: ~30.8 µs (fast, low overhead)
-MemorySnapshot: ~4.38 ms (significantly heavier, likely due to heap scanning) -> try to avoid in production, otherwise expensive
-GcStats: ~120 ns (extremely lightweight)
-ThreadPoolStats: ~80 ns (also very lightweight)
+**Performance notes:**
+- **CpuUsage**: ~30.8 µs (moderate, due to sampling)
+- **MemorySnapshot**: ~4.38 ms (heavyweight, avoid in tight loops for production)
+- **GcStats**: ~120 ns (extremely lightweight, safe for frequent collection)
+- **ThreadPoolStats**: ~80 ns (extremely lightweight, safe for frequent collection)
+
+## Testing
+
+### Unit Tests
+
+Run tests across all platforms:
+- ```bash
+	dotnet test DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj -c Release
+	```
+
+Test coverage includes:
+- Individual metric collection validation (CPU, Memory, GC, ThreadPool)
+- Consistency checks across multiple calls
+- Concurrent metric collection stress tests
+- Dependency injection registration and initialization
+- Model validation and timestamp tracking
+
+###  Continuous Integration
+
+GitHub Actions workflow runs on every push/PR:
+- **Platforms:** Windows, Linux, macOS
+- **Targets:** .NET 8.0 (cross-platform) and net8.0-windows (Windows-specific)
+- **Jobs:**
+  - Build and Test: Compiles on all platforms, runs full test suite
+  - Benchmarks: Runs performance baseline on each platform
+  - Code Quality: Checks for unused imports and enforces code style
+
+View CI status in `.github/workflows/dotnet.yml`.
