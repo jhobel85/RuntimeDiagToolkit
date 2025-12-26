@@ -1,0 +1,42 @@
+{
+  "cpuUsage": {
+    "percentageUsed": 96.0,
+    "totalProcessorTimeMs": 250000,
+    "userModeTimeMs": 200000,
+    "privilegedModeTimeMs": 50000,
+    "collectedAt": "2025-12-26T14:30:00Z"
+  },
+  "memorySnapshot": {
+    "totalSystemMemoryBytes": 17179869184,
+    "availableSystemMemoryBytes": 858993459,
+    "processWorkingSetBytes": 16000000000,
+    "processPrivateMemoryBytes": 14000000000,
+    "managedHeapBytes": 10000000000,
+    "processVirtualMemoryBytes": 16500000000,
+    "memoryPressurePercentage": 95,
+    "collectedAt": "2025-12-26T14:30:00Z"
+  },
+  "gcStats": {
+    "gen0CollectionCount": 2500,
+    "gen1CollectionCount": 150,
+    "gen2CollectionCount": 200,
+    "totalGcPauseMsPercentage": 15.5,
+    "heapFragmentationPercentage": 45.2,
+    "totalAllocatedBytes": 34359738368,
+    "isGcConcurrentEnabled": false,
+    "collectedAt": "2025-12-26T14:30:00Z"
+  },
+  "threadPoolStats": {
+    "workerThreadCount": 32,
+    "availableWorkerThreads": 1,
+    "ioThreadCount": 16,
+    "availableIoThreads": 2,
+    "queuedWorkItemCount": 150,
+    "completedWorkItemCount": 1000000,
+    "minWorkerThreads": 8,
+    "maxWorkerThreads": 128,
+    "minIoThreads": 4,
+    "maxIoThreads": 64,
+    "collectedAt": "2025-12-26T14:30:00Z"
+  }
+}
