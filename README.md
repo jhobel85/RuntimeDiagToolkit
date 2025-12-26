@@ -204,3 +204,70 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
 
 \- Documentation + samples
 
+**## Planning and project overview**
+ [x] Scaffold (skeleton) .NET 8 multi-target library
+ [x] Define IRuntimeMetricsProvider API
+ [x] Add core API models (CPU, Memory, GC, ThreadPool)
+ [x] Build platform dispatcher (DI-friendly factory)
+ [x] Create DiagnosticsToolkit.AspNetCore package
+ [x] Implement Windows metrics provider (ETW + Process)
+ [] Implement Linux metrics provider (/proc + cgroup v2)
+ [] Implement macOS/iOS provider (unified logging + memory pressure)
+ [] Implement Android metrics provider (ADB + Java interop)
+ [] Create DiagnosticsToolkit.Maui package
+ [] Roslyn source generator for collectors
+ [] Performance hardening (allocation-free, spans)
+ [] BenchmarkDotNet suite (CPU, Memory, GC)
+ [] Optimize mobile implementations (battery, GC, background)
+ [] AI diagnostics analyzer (issue detection + suggestions)
+ [] CLI: diagnostics-ai analyze --input metrics.json
+ [] AI-generated guidance (samples, integrations, troubleshooting)
+ [] Cross-platform tests & harnesses (GH Actions + MAUI)
+ [] CI benchmark regression gate
+ [] Open-source repo setup (guides, docs, templates)
+ [] Documentation & samples
+ [] Deliverables packaging
+
+---
+
+## Project summary
+
+- Cross-platform (Win, Linux, Mac, Android, iOS, ..) diagnostics library with unified `IRuntimeMetricsProvider` and platform-specific providers. 
+UseCases:
+- Performance Monitoring & Diagnostics: ASP.NET Core package exposes a minimal diagnostics endpoint for quick integration.
+-  Benchmarking & Profiling: Benchmark suite (BenchmarkDotNet) measures call overhead for CPU, memory, GC, and thread pool metrics. Helps developers measure runtime behavior under load and identify bottlenecks without significant overhead.
+- Production Health Checks: Lightweight enough to run periodically in live systems for telemetry and alerting without impacting performance. 
+
+## ASP.NET Core sample
+
+- Sample project: [DiagnosticsToolkit.Sample](DiagnosticsToolkit.Sample/Program.cs)
+- Run locally:
+	- ```bash
+		cd DiagnosticsToolkit.Sample
+		dotnet run
+		```
+- Endpoints:
+	- Root: `/` → simple health text
+	- Metrics: `/_diagnostics/runtime` → CPU, memory, GC, thread pool metrics as JSON
+
+## ASP.NET Benchmark
+
+Run benchmarks (Windows target for full metrics):
+	- ```bash
+		cd DiagnosticsToolkit.Benchmarks
+		dotnet run -c Release -f net8.0-windows
+		```
+
+Example of the result
+
+| Method          | Mean            | Error          | StdDev        |
+|---------------- |----------------:|---------------:|--------------:|
+| CpuUsage        |    30,814.18 ns |   3,850.151 ns |    999.872 ns |
+| MemorySnapshot  | 4,381,964.38 ns | 369,675.287 ns | 96,003.498 ns |
+| GcStats         |       120.67 ns |       5.626 ns |      0.871 ns |
+| ThreadPoolStats |        80.54 ns |      13.930 ns |      3.618 ns |
+
+CpuUsage: ~30.8 µs (fast, low overhead)
+MemorySnapshot: ~4.38 ms (significantly heavier, likely due to heap scanning) -> try to avoid in production, otherwise expensive
+GcStats: ~120 ns (extremely lightweight)
+ThreadPoolStats: ~80 ns (also very lightweight)

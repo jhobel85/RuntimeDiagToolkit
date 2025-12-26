@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>RuntimeMetricsBenchmarks-20251226-154600</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.13.10, Windows 11 (10.0.22631.6345/23H2/2023Update/SunValley3)
+11th Gen Intel Core i7-11850H 2.50GHz, 1 CPU, 16 logical and 8 physical cores
+.NET SDK 9.0.307
+  [Host]   : .NET 8.0.22 (8.0.2225.52707), X64 RyuJIT AVX2
+  ShortRun : .NET 8.0.22 (8.0.2225.52707), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>Job=ShortRun  IterationCount=5  LaunchCount=1  
+WarmupCount=1  
+</code></pre>
+
+<table>
+<thead><tr><th>Method   </th><th>Mean     </th><th>Error   </th><th>StdDev </th>
+</tr>
+</thead><tbody><tr><td>CpuUsage</td><td>30,814.18 ns</td><td>3,850.151 ns</td><td>999.872 ns</td>
+</tr><tr><td>MemorySnapshot</td><td>4,381,964.38 ns</td><td>369,675.287 ns</td><td>96,003.498 ns</td>
+</tr><tr><td>GcStats</td><td>120.67 ns</td><td>5.626 ns</td><td>0.871 ns</td>
+</tr><tr><td>ThreadPoolStats</td><td>80.54 ns</td><td>13.930 ns</td><td>3.618 ns</td>
+</tr></tbody></table>
+</body>
+</html>
