@@ -213,7 +213,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
  [x] Implement Windows metrics provider (ETW + Process)
 [x] Implement Linux metrics provider (/proc + cgroup v2)
 [x] Implement macOS/iOS provider (process + sysctl + vm_statistics64 for memory pressure)
- [] Implement Android metrics provider (ADB + Java interop)
+[x] Implement Android metrics provider (/proc sampling + runtime counters)
  [] Create DiagnosticsToolkit.Maui package
  [] Roslyn source generator for collectors
  [] Performance hardening (allocation-free, spans)
@@ -241,10 +241,14 @@ UseCases:
 ## ASP.NET Core sample
 
 - Sample project: [DiagnosticsToolkit.Sample](DiagnosticsToolkit.Sample/Program.cs)
-- Run locally (Windows or Linux):
+- Run locally (Windows, Linux or macOS):
 	- ```bash
 		cd DiagnosticsToolkit.Sample
 		dotnet run
+		```
+- Run on Android: publish the sample for Android and host it inside your app (MAUI package is pending).
+	- ```bash
+		dotnet publish DiagnosticsToolkit.Sample/DiagnosticsToolkit.Sample.csproj -f net8.0-android -c Release
 		```
 - Endpoints:
 	- Root: `/` → simple health text
@@ -262,6 +266,10 @@ Run benchmarks:
 		- ```bash
 			cd DiagnosticsToolkit.Benchmarks
 			dotnet run -c Release -f net8.0-windows
+			```
+	- On Android: publish for Android, then invoke benchmarks within your Android host (no standalone console runner on device).
+		- ```bash
+			dotnet publish DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj -f net8.0-android -c Release
 			```
 
 Example of the result

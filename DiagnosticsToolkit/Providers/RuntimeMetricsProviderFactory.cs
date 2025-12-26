@@ -53,7 +53,7 @@ public static class RuntimeMetricsProviderFactory
 
     private static IRuntimeMetricsProvider CreateAndroidProvider()
     {
-        throw new NotImplementedException("Android provider is not yet implemented.");
+        return new Platforms.DefaultAndroidMetricsProvider();
     }
 
     private static IRuntimeMetricsProvider CreateIosProvider()
