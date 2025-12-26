@@ -250,3 +250,12 @@ The CLI is optimized for:
 - Integration with APM tools (Application Insights, Datadog, etc.)
 - Auto-remediation suggestions
 - Metrics history and trend analysis
+
+## Output: A Smart Report
+The engine produces a DiagnosticReport containing:
+
+Findings — Detected issues sorted by severity (Critical → Error → Warning → Info)
+Recommendations — Actionable advice for each issue
+Health Status — Overall system assessment (Good/Fair/Poor/Critical)
+Summary counts — Critical, Error, Warning, and Info issue counts
+Example: Running diagnostics-ai analyze -i critical-metrics.json with 96% CPU + 93% memory detected 5 findings (2 critical, 2 errors, 1 warning) with sorted severity and specific remediation steps.

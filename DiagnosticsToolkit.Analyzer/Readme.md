@@ -128,3 +128,25 @@ Run tests: `dotnet test DiagnosticsToolkit.Tests`
 - Export reports to JSON/HTML formats
 - Threshold customization per rule
 - Machine learning for anomaly detection
+
+
+## AI Architecture in diagnostics-ai
+Core Component: DiagnosticRuleEngine applies 4 expert-system rules to detect performance issues:
+
+GcThresholdRule — Detects garbage collection thrashing
+
+Warning if Gen 0 collections > 1000
+Error if Gen 2 collections > 100
+ThreadPoolStarvationRule — Detects thread starvation
+
+Critical if < 2 available worker threads
+Warning if > 10 queued work items
+MemoryPressureRule — Detects high memory usage
+
+Error if memory usage > 80%
+Critical if > 95%
+CpuUtilizationRule — Detects CPU saturation
+
+Warning at 70%, Error at 80%, Critical at 95%
+
+The "AI" is domain knowledge encoded as rules, not neural networks — making it fast (< 1ms), deterministic, and explainable.
