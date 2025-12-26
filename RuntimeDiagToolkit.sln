@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosticsToolkit.AspNetCo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosticsToolkit.Benchmarks", "DiagnosticsToolkit.Benchmarks\DiagnosticsToolkit.Benchmarks.csproj", "{BD1C1569-92C7-4F25-AA6E-A241E715E927}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosticsToolkit.AspNetCore.Sample", "DiagnosticsToolkit.AspNetCore.Sample\DiagnosticsToolkit.AspNetCore.Sample.csproj", "{893679CE-29A9-40BD-B9F6-052D6BDECB04}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosticsToolkit.AspNetCore.Sample.API", "DiagnosticsToolkit.AspNetCore.Sample.API\DiagnosticsToolkit.AspNetCore.Sample.API.csproj", "{893679CE-29A9-40BD-B9F6-052D6BDECB04}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

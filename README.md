@@ -238,17 +238,17 @@ UseCases:
 -  Benchmarking & Profiling: Benchmark suite (BenchmarkDotNet) measures call overhead for CPU, memory, GC, and thread pool metrics. Helps developers measure runtime behavior under load and identify bottlenecks without significant overhead.
 - Production Health Checks: Lightweight enough to run periodically in live systems for telemetry and alerting without impacting performance. 
 
-## ASP.NET Core sample
+## ASP.NET Core API
 
-- Sample project: [DiagnosticsToolkit.AspNetCore.Sample](DiagnosticsToolkit.AspNetCore.Sample/Program.cs)
+- Project: [DiagnosticsToolkit.AspNetCore.Sample.API](DiagnosticsToolkit.AspNetCore.Sample.API/Program.cs)
 - Run locally (Windows, Linux or macOS):
 	- ```bash
-		cd DiagnosticsToolkit.AspNetCore.Sample
+		cd DiagnosticsToolkit.AspNetCore.Sample.API
 		dotnet run
 		```
-- Run on Android: publish the sample for Android and host it inside your app (MAUI package is pending).
+- Run on Android: publish the API for Android and host it inside your app (MAUI package is pending).
 	- ```bash
-		dotnet publish DiagnosticsToolkit.AspNetCore.Sample/DiagnosticsToolkit.AspNetCore.Sample.csproj -f net8.0-android -c Release
+		dotnet publish DiagnosticsToolkit.AspNetCore.Sample.API/DiagnosticsToolkit.AspNetCore.Sample.API.csproj -f net8.0-android -c Release
 		```
 - Endpoints:
 	- Root: `/` → simple health text
