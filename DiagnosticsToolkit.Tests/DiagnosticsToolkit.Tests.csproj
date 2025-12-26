@@ -16,6 +16,7 @@
     </PackageReference>
     <ProjectReference Include="..\DiagnosticsToolkit\DiagnosticsToolkit.csproj" />
     <ProjectReference Include="..\DiagnosticsToolkit.AspNetCore\DiagnosticsToolkit.AspNetCore.csproj" />
+    <ProjectReference Include="..\DiagnosticsToolkit.Analyzer\DiagnosticsToolkit.Analyzer.csproj" />
   </ItemGroup>
 
 </Project>
