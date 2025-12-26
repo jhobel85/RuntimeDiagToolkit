@@ -57,22 +57,47 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         return new ValueTask<CpuUsage>(result);
     }
 
+//Pressure is computed as used/total from VM stats; if sysctl totals are missing, it falls back to total derived from VM page counts.
     public ValueTask<MemorySnapshot> GetMemorySnapshotAsync(CancellationToken cancellationToken = default)
     {
         _currentProcess.Refresh();
 
         var gcTotal = GC.GetTotalMemory(false);
-        var totalSystem = TryGetTotalMemoryBytes(out var memBytes) ? memBytes : 0;
+
+        long totalSystem = 0;
+        long availableSystem = 0;
+
+#if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS
+        // Prefer native counters for total/available memory.
+        if (!TryGetTotalMemoryBytes(out totalSystem))
+        {
+            totalSystem = 0;
+        }
+
+        if (!TryGetVmMemoryAvailability(out availableSystem, out var pageTotalBytes) && totalSystem == 0)
+        {
+            // If sysctl failed but VM stats returned a computed total, use that.
+            totalSystem = pageTotalBytes;
+        }
+#endif
+
+        // Compute a simple pressure percentage when totals are known.
+        int pressurePct = 0;
+        if (totalSystem > 0 && availableSystem >= 0)
+        {
+            var used = totalSystem - availableSystem;
+            pressurePct = (int)Math.Clamp((double)used / totalSystem * 100.0, 0, 100);
+        }
 
         var result = new MemorySnapshot
         {
             TotalSystemMemoryBytes = totalSystem,
-            AvailableSystemMemoryBytes = 0, // Apple platforms do not expose a simple free memory counter without heavier interop
+            AvailableSystemMemoryBytes = availableSystem,
             ProcessWorkingSetBytes = _currentProcess.WorkingSet64,
             ProcessPrivateMemoryBytes = _currentProcess.PrivateMemorySize64,
             ManagedHeapBytes = gcTotal,
             ProcessVirtualMemoryBytes = _currentProcess.VirtualMemorySize64,
-            MemoryPressurePercentage = 0,
+            MemoryPressurePercentage = pressurePct,
             CollectedAt = DateTimeOffset.UtcNow
         };
 
@@ -153,8 +178,91 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         return false;
     }
 
+    private static bool TryGetVmMemoryAvailability(out long availableBytes, out long computedTotalBytes)
+    {
+        availableBytes = 0;
+        computedTotalBytes = 0;
+
+#if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS
+        try
+        {
+            var host = mach_host_self();
+            if (host == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            uint pageSize;
+            if (host_page_size(host, out pageSize) != 0)
+            {
+                return false;
+            }
+
+            var stats = new vm_statistics64();
+            int count = Marshal.SizeOf<vm_statistics64>() / sizeof(int);
+            if (host_statistics64(host, HOST_VM_INFO64, ref stats, ref count) != 0)
+            {
+                return false;
+            }
+
+            var freePages = stats.free_count + stats.inactive_count + stats.speculative_count;
+            var totalPages = stats.active_count + stats.inactive_count + stats.free_count + stats.wire_count + stats.speculative_count;
+
+            availableBytes = checked((long)freePages * pageSize);
+            computedTotalBytes = checked((long)totalPages * pageSize);
+            return availableBytes >= 0 && computedTotalBytes > 0;
+        }
+        catch
+        {
+            return false;
+        }
+#else
+        return false;
+#endif
+    }
+
 #if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS
     [DllImport("libc", SetLastError = true)]
     private static extern int sysctlbyname(string name, out ulong oldp, ref nuint oldlenp, IntPtr newp, nuint newlen);
+
+    [DllImport("libSystem.dylib")]
+    private static extern IntPtr mach_host_self();
+
+    [DllImport("libSystem.dylib")]
+    private static extern int host_statistics64(IntPtr host_priv, int flavor, ref vm_statistics64 stat, ref int count);
+
+    [DllImport("libSystem.dylib")]
+    private static extern int host_page_size(IntPtr host, out uint pageSize);
+
+    private const int HOST_VM_INFO64 = 4;
+
+    // Partial definition with fields we need for availability calculation.
+    private struct vm_statistics64
+    {
+        public ulong free_count;
+        public ulong active_count;
+        public ulong inactive_count;
+        public ulong wire_count;
+        public ulong zero_fill_count;
+        public ulong reactivations;
+        public ulong pageins;
+        public ulong pageouts;
+        public ulong faults;
+        public ulong cow_faults;
+        public ulong lookups;
+        public ulong hits;
+        public ulong purgable_count;
+        public ulong purges;
+        public ulong speculative_count;
+        public ulong decompressions;
+        public ulong compressions;
+        public ulong swapins;
+        public ulong swapouts;
+        public ulong compressor_page_count;
+        public ulong throttled_count;
+        public ulong external_page_count;
+        public ulong internal_page_count;
+        public ulong total_uncompressed_pages_in_compressor;
+    }
 #endif
 }
