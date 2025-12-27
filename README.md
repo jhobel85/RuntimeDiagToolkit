@@ -216,7 +216,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
  [x] GitHub Actions CI workflow (Windows, Linux, macOS)
  [x] Roslyn source generator for collectors
  [x] Performance hardening (allocation-free ValueStopwatch, stack-based span readers, volatile fields instead of ConcurrentDictionary)
- [] Optimize mobile implementations (battery, GC, background)
+ [x] Optimize mobile implementations (battery, GC, background)
  [x] AI diagnostics analyzer (issue detection + suggestions)
  [x] CLI: diagnostics-ai analyze --input metrics.json
  [x] AI-generated guidance (samples, integrations, troubleshooting)
