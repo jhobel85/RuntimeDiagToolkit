@@ -220,7 +220,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
  [x] AI diagnostics analyzer (issue detection + suggestions)
  [x] CLI: diagnostics-ai analyze --input metrics.json
  [x] AI-generated guidance (samples, integrations, troubleshooting)
- [] CI benchmark regression gate
+ [x] CI benchmark regression gate
  [] Open-source repo setup (guides, docs, templates)
  [] Documentation & samples
  [] Deliverables packaging
@@ -376,7 +376,13 @@ GitHub Actions workflow runs on every push/PR:
 - **Targets:** .NET 8.0 (cross-platform) and net8.0-windows (Windows-specific)
 - **Jobs:**
   - Build and Test: Compiles on all platforms, runs full test suite
-  - Benchmarks: Runs performance baseline on each platform
+  - Benchmarks: Runs performance baseline on each platform; fails if regression > 10%
   - Code Quality: Checks for unused imports and enforces code style
+
+**Benchmark Gate:**
+- Compares current run against `benchmark-baselines.json`
+- Fails the build if any metric regresses > 10%
+- Uploads benchmark JSON artifacts for tracking over time
+- Automatically updated baseline when intentional optimizations are made
 
 View CI status in `.github/workflows/dotnet.yml`.

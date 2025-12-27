@@ -35,11 +35,27 @@ jobs:
 
     - name: Run Benchmarks (Release, Windows only)
       if: matrix.os == 'windows-latest'
-      run: dotnet run --project DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj --configuration Release --framework net8.0-windows
+      run: |
+        dotnet run --project DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj --configuration Release --framework net8.0-windows -- --exportjson benchmark-results-${{ matrix.os }}.json
+        echo "Benchmark completed for ${{ matrix.os }}"
 
     - name: Run Benchmarks (Release, Non-Windows)
       if: matrix.os != 'windows-latest'
-      run: dotnet run --project DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj --configuration Release --framework net8.0
+      run: |
+        dotnet run --project DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj --configuration Release --framework net8.0 -- --exportjson benchmark-results-${{ matrix.os }}.json
+        echo "Benchmark completed for ${{ matrix.os }}"
+
+    - name: Compare Benchmarks Against Baseline
+      if: always()
+      run: python3 .github/scripts/benchmark_regression_gate.py --results benchmark-results-${{ matrix.os }}.json --baseline benchmark-baselines.json --threshold 0.10
+
+    - name: Upload Benchmark Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results-${{ matrix.os }}
+        path: benchmark-results-${{ matrix.os }}.json
+        retention-days: 30
 
   code-quality:
     runs-on: ubuntu-latest
