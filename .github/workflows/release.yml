@@ -1,0 +1,69 @@
+name: Release to NuGet
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.x'
+
+    - name: Restore dependencies
+      run: dotnet restore RuntimeDiagToolkit.sln
+
+    - name: Build
+      run: dotnet build RuntimeDiagToolkit.sln --configuration Release --no-restore
+
+    - name: Run Tests
+      run: dotnet test DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-build
+
+    - name: Pack NuGet packages
+      run: |
+        mkdir -p ./nupkg
+        dotnet pack DiagnosticsToolkit/DiagnosticsToolkit.csproj -c Release -o ./nupkg
+        dotnet pack DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj -c Release -o ./nupkg
+        dotnet pack DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj -c Release -o ./nupkg
+        dotnet pack DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj -c Release -o ./nupkg
+        dotnet pack DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj -c Release -o ./nupkg
+
+    - name: Push to NuGet
+      run: |
+        dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      continue-on-error: true
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## NuGet Packages
+          - DiagnosticsToolkit
+          - DiagnosticsToolkit.AspNetCore
+          - DiagnosticsToolkit.Maui
+          - DiagnosticsToolkit.Generators
+          - DiagnosticsToolkit.Cli
+
+          See [CHANGELOG.md](CHANGELOG.md) for details.
+        draft: false
+        prerelease: false
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: nupkg
+        path: ./nupkg/
+        retention-days: 30

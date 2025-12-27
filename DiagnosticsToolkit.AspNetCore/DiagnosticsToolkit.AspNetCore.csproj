@@ -4,6 +4,19 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- Package metadata -->
+    <PackageId>DiagnosticsToolkit.AspNetCore</PackageId>
+    <Version>1.0.0</Version>
+    <Title>DiagnosticsToolkit for ASP.NET Core</Title>
+    <Description>ASP.NET Core integration for DiagnosticsToolkit. Exposes runtime diagnostics endpoint for health checks and monitoring.</Description>
+    <Authors>Your Name;Contributors</Authors>
+    <PackageProjectUrl>https://github.com/jhobe85/RuntimeDiagToolkit</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/jhobe85/RuntimeDiagToolkit</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>diagnostics;aspnetcore;metrics;monitoring;health-check</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,7 +5,17 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <IsRoslynComponent>true</IsRoslynComponent>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>DiagnosticsToolkit.Generators</PackageId>
+    <Version>1.0.0</Version>
+    <Title>DiagnosticsToolkit.Generators</Title>
+    <Description>Roslyn source generator for DiagnosticsToolkit - auto-generates metric collectors and reduces boilerplate for developers</Description>
+    <Authors>Your Name;Contributors</Authors>
+    <PackageProjectUrl>https://github.com/jhobe85/RuntimeDiagToolkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jhobe85/RuntimeDiagToolkit</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>diagnostics;metrics;source-generator;roslyn;code-generation;cpu;memory;gc;threading</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

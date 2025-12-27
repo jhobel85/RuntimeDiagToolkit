@@ -6,6 +6,19 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Package metadata -->
+    <PackageId>DiagnosticsToolkit</PackageId>
+    <Version>1.0.0</Version>
+    <Title>DiagnosticsToolkit</Title>
+    <Description>Cross-platform .NET 8 diagnostics library for collecting runtime metrics (CPU, memory, GC, thread pool) across Windows, Linux, macOS, Android, and iOS.</Description>
+    <Authors>Your Name;Contributors</Authors>
+    <PackageProjectUrl>https://github.com/jhobe85/RuntimeDiagToolkit</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/jhobe85/RuntimeDiagToolkit</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>diagnostics;metrics;cpu;memory;gc;threading;cross-platform;android;ios;macos;windows;linux</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

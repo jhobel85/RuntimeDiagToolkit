@@ -8,6 +8,18 @@
     <PublishAot>false</PublishAot>
     <AssemblyName>diagnostics-ai</AssemblyName>
     <RootNamespace>DiagnosticsToolkit.Cli</RootNamespace>
+    <PackageId>DiagnosticsToolkit.Cli</PackageId>
+    <Version>1.0.0</Version>
+    <Title>DiagnosticsToolkit.Cli</Title>
+    <Description>AI-assisted diagnostics command-line tool - analyze runtime metrics and get optimization recommendations</Description>
+    <Authors>Your Name;Contributors</Authors>
+    <PackageProjectUrl>https://github.com/jhobe85/RuntimeDiagToolkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jhobe85/RuntimeDiagToolkit</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>diagnostics;metrics;cli;command-line;ai;analysis;performance;optimization</PackageTags>
+    <PackAsTool>true</PackAsTool>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
