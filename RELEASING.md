@@ -1,4 +1,4 @@
-# Release & Packaging Guide
+# Release & Packaging Guide - Manual steps todo locally
 
 This document describes how to build, package, and release DiagnosticsToolkit to GitHub Packages.
 
@@ -84,7 +84,7 @@ dotnet nuget push ./nupkg/DiagnosticsToolkit.Cli.1.1.0.nupkg --api-key YOUR_GITH
 
 **Note**: Generate a GitHub Personal Access Token with `write:packages` permission from https://github.com/settings/tokens
 
-## GitHub Release Workflow
+## GitHub Release Workflow - Automated steps via CI Runner
 
 Git tag push will automatically build, test, and publish all packages to GitHub Packages with zero manual intervention.
 
@@ -110,6 +110,10 @@ Automated via GitHub Actions:
 ## Package Consumption
 
 ### Configure GitHub Packages Source
+- Package Sources: Add multiple sources files to the provided package.
+- Authentication: Store credentials for private feeds (GitHub PAT, Azure Artifacts token). Use ClearTextPassword or encrypted storage.
+- Source Priority: Control which source is checked first for packages.
+- Fallback Behavior: Configure whether to fail or continue if a source is unavailable.
 
 First, add GitHub Packages as a NuGet source and authenticate:
 
