@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        dotnet-version: ['8.x']
+        dotnet-version: ['9.x']
 
     steps:
     - uses: actions/checkout@v4
@@ -26,14 +26,14 @@ jobs:
 
     - name: Install required .NET workloads (Android, WASM)
       run: |
-        dotnet workload install android wasm-tools-net8
+        dotnet workload install android wasm-tools
         dotnet workload restore
 
     - name: Restore dependencies
       run: dotnet restore RuntimeDiagToolkit.sln
 
-    - name: Build
-      run: dotnet build RuntimeDiagToolkit.sln --configuration Release --no-restore
+    - name: Build (core + tests only)
+      run: dotnet build DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-restore
 
     - name: Run Tests
       run: dotnet test DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-build --verbosity normal
@@ -70,19 +70,55 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.x'
+        dotnet-version: '9.x'
 
     - name: Install required .NET workloads (Android, WASM)
       run: |
-        dotnet workload install android wasm-tools-net8
+        dotnet workload install android wasm-tools
         dotnet workload restore
+
+  maui-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 10 for MAUI
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.x'
+
+    - name: Setup .NET 9 for core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.x'
+
+    - name: Install MAUI workloads (iOS, MacCatalyst, Android)
+      run: |
+        dotnet workload install ios maccatalyst android
+        dotnet workload restore
+
+    - name: Restore MAUI sample
+      working-directory: DiagnosticsToolkit.Maui.Sample
+      run: dotnet restore DiagnosticsToolkit.Maui.Sample.csproj
+
+    - name: Build MAUI sample (Android)
+      working-directory: DiagnosticsToolkit.Maui.Sample
+      run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-android -c Debug --no-restore
+
+    - name: Build MAUI sample (iOS)
+      working-directory: DiagnosticsToolkit.Maui.Sample
+      run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-ios -c Debug --no-restore
+
+    - name: Build MAUI sample (MacCatalyst)
+      working-directory: DiagnosticsToolkit.Maui.Sample
+      run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-maccatalyst -c Debug --no-restore
 
     - name: Restore dependencies
       run: dotnet restore RuntimeDiagToolkit.sln
 
-    - name: Build
-      run: dotnet build RuntimeDiagToolkit.sln --configuration Release --no-restore
+    - name: Build (core library only)
+      run: dotnet build DiagnosticsToolkit/DiagnosticsToolkit.csproj --configuration Release --no-restore
 
     - name: Check for unused using statements
       run: |
-        dotnet build RuntimeDiagToolkit.sln --configuration Release -p:EnforceCodeStyleInBuild=true
+        dotnet build DiagnosticsToolkit/DiagnosticsToolkit.csproj --configuration Release -p:EnforceCodeStyleInBuild=true

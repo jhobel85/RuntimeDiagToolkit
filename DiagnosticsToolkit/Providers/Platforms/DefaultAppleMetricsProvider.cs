@@ -106,7 +106,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
             long totalSystem = 0;
             long availableSystem = 0;
 
-#if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS
+#if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS || NET10_0 || NET10_0_MACCATALYST || NET10_0_IOS
         // Prefer native counters for total/available memory.
         if (!TryGetTotalMemoryBytes(out totalSystem))
         {
@@ -278,7 +278,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         availableBytes = 0;
         computedTotalBytes = 0;
 
-#if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS
+#if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS || NET10_0 || NET10_0_MACCATALYST || NET10_0_IOS
         try
         {
             var host = mach_host_self();
@@ -316,7 +316,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
 #endif
     }
 
-#if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS
+#if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS || NET10_0 || NET10_0_MACCATALYST || NET10_0_IOS
     [DllImport("libc", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern int sysctlbyname(string name, out ulong oldp, ref nuint oldlenp, IntPtr newp, nuint newlen);
 

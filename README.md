@@ -122,7 +122,7 @@ Or use Visual Studio Package Manager:
 			.UseDiagnosticsToolkit(o => o.BaseInterval = TimeSpan.FromMilliseconds(250));
 		return builder.Build();
 		```
-- Targets: net8.0-android, net8.0-ios, net8.0-maccatalyst
+- Targets: net10.0-android, net10.0-ios, net10.0-maccatalyst
 
 ### Mobile Sampling Controls
 
@@ -146,15 +146,15 @@ Or use Visual Studio Package Manager:
 		```
 	- Android emulator/device:
 		```bash
-		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net8.0-android -c Debug
+		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-android -c Debug
 		```
 	- iOS (on macOS):
 		```bash
-		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net8.0-ios -c Debug
+		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-ios -c Debug
 		```
 	- Mac Catalyst:
 		```bash
-		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net8.0-maccatalyst -c Debug
+		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-maccatalyst -c Debug
 		```
 
 The sample demonstrates:
