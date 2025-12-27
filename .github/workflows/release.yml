@@ -18,13 +18,8 @@ jobs:
         with:
           dotnet-version: '9.x'
 
-      - name: Restore dependencies (non-MAUI)
-        run: |
-          dotnet restore DiagnosticsToolkit/DiagnosticsToolkit.csproj
-          dotnet restore DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj
-          dotnet restore DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj
-          dotnet restore DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj
-          dotnet restore DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj
+      - name: Restore dependencies (core only, no MAUI)
+        run: dotnet restore RuntimeDiagToolkit.Core.slnf
 
       - name: Build (non-MAUI)
         run: |
