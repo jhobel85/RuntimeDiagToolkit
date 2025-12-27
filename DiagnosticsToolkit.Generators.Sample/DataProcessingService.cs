@@ -2,6 +2,7 @@ using DiagnosticsToolkit.Generators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DiagnosticsToolkit.Generators.Sample;
 
@@ -20,29 +21,17 @@ public class DataProcessingService
     /// Decorated with [MetricCollector] to generate: DataProcessingService_QueryDatabaseAsync_Metrics
     /// </summary>
     [MetricCollector]
-    public async System.Threading.Tasks.Task<List<int>> QueryDatabaseAsync(string query)
+    public async Task<List<int>> QueryDatabaseAsync(string query)
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        try
+        return await DataProcessingService_QueryDatabaseAsync_Metrics.MeasureAsync(async () =>
         {
-            await System.Threading.Tasks.Task.Delay(_random.Next(10, 100));
+            await Task.Delay(_random.Next(10, 100));
 
             if (query.Contains("error", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException($"Invalid query: {query}");
 
-            var result = Enumerable.Range(1, 10).ToList();
-            
-            stopwatch.Stop();
-            // Use the generated helper class
-            DataProcessingService_QueryDatabaseAsync_Metrics.RecordSuccess(stopwatch.ElapsedMilliseconds);
-            return result;
-        }
-        catch
-        {
-            // Use the generated helper class
-            DataProcessingService_QueryDatabaseAsync_Metrics.RecordException();
-            throw;
-        }
+            return Enumerable.Range(1, 10).ToList();
+        });
     }
 
     /// <summary>
@@ -52,24 +41,13 @@ public class DataProcessingService
     [MetricCollector]
     public void ProcessData(List<int> data)
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        try
+        DataProcessingService_ProcessData_Metrics.Measure(() =>
         {
             foreach (var item in data)
             {
                 var result = Math.Sqrt(item) * 100;
             }
-            
-            stopwatch.Stop();
-            // Use the generated helper class
-            DataProcessingService_ProcessData_Metrics.RecordSuccess(stopwatch.ElapsedMilliseconds);
-        }
-        catch
-        {
-            // Use the generated helper class
-            DataProcessingService_ProcessData_Metrics.RecordException();
-            throw;
-        }
+        });
     }
 
     /// <summary>
@@ -79,22 +57,10 @@ public class DataProcessingService
     [MetricCollector]
     public List<string> TransformData(List<int> items)
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        try
+        return DataProcessingService_TransformData_Metrics.Measure(() =>
         {
-            var result = items.Select(i => $"Item_{i}").ToList();
-            
-            stopwatch.Stop();
-            // Use the generated helper class
-            DataProcessingService_TransformData_Metrics.RecordSuccess(stopwatch.ElapsedMilliseconds);
-            return result;
-        }
-        catch
-        {
-            // Use the generated helper class
-            DataProcessingService_TransformData_Metrics.RecordException();
-            throw;
-        }
+            return items.Select(i => $"Item_{i}").ToList();
+        });
     }
 
     /// <summary>
