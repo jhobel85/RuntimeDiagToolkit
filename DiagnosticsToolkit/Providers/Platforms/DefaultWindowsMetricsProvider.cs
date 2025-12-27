@@ -16,6 +16,10 @@ public partial class DefaultWindowsMetricsProvider : IRuntimeMetricsProvider
     private DateTime _lastCpuSampleTime;
     private TimeSpan _lastTotalProcessorTime;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DefaultWindowsMetricsProvider"/> class.
+    /// Sets up process monitoring and initializes the runtime counters listener.
+    /// </summary>
     public DefaultWindowsMetricsProvider()
     {
         _currentProcess = Process.GetCurrentProcess();

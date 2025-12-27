@@ -19,6 +19,7 @@ public sealed class DefaultLinuxMetricsProvider : IRuntimeMetricsProvider
     private long _lastIdleCpuTicks;
     private long _lastTotalCpuTicks;
 
+    /// <inheritdoc/>
     public DefaultLinuxMetricsProvider()
     {
         _currentProcess = Process.GetCurrentProcess();
@@ -26,6 +27,7 @@ public sealed class DefaultLinuxMetricsProvider : IRuntimeMetricsProvider
         _ = RuntimeCounters.Instance; // start runtime counters listener eagerly
     }
 
+    /// <inheritdoc/>
     public ValueTask<CpuUsage> GetCpuUsageAsync(CancellationToken cancellationToken = default)
     {
         if (!TryReadCpuSample(out var idle, out var total))
@@ -63,6 +65,7 @@ public sealed class DefaultLinuxMetricsProvider : IRuntimeMetricsProvider
         return new ValueTask<CpuUsage>(result);
     }
 
+    /// <inheritdoc/>
     public ValueTask<MemorySnapshot> GetMemorySnapshotAsync(CancellationToken cancellationToken = default)
     {
         var totalMemory = GC.GetTotalMemory(false);
@@ -83,6 +86,7 @@ public sealed class DefaultLinuxMetricsProvider : IRuntimeMetricsProvider
         return new ValueTask<MemorySnapshot>(result);
     }
 
+    /// <inheritdoc/>
     public ValueTask<GcStats> GetGcStatsAsync(CancellationToken cancellationToken = default)
     {
         var mem = GC.GetGCMemoryInfo();
@@ -107,6 +111,7 @@ public sealed class DefaultLinuxMetricsProvider : IRuntimeMetricsProvider
         return new ValueTask<GcStats>(result);
     }
 
+    /// <inheritdoc/>
     public ValueTask<ThreadPoolStats> GetThreadPoolStatsAsync(CancellationToken cancellationToken = default)
     {
         ThreadPool.GetAvailableThreads(out int workerThreads, out int ioThreads);

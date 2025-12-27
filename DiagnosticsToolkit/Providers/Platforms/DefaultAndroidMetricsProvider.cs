@@ -47,11 +47,11 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         TryReadCpuSample(out _lastIdleCpuTicks, out _lastTotalCpuTicks);
         _ = RuntimeCounters.Instance; // initialize runtime counters listener
         _currentSamplingInterval = _baseSamplingInterval;
-        var now = DateTimeOffset.UtcNow;
-        _lastCpuSampleAt = now;
-        _lastMemSampleAt = now;
-        _lastGcSampleAt = now;
-        _lastTpSampleAt = now;
+        // Initialize all sample times to MinValue to force computation on first call
+        _lastCpuSampleAt = DateTimeOffset.MinValue;
+        _lastMemSampleAt = DateTimeOffset.MinValue;
+        _lastGcSampleAt = DateTimeOffset.MinValue;
+        _lastTpSampleAt = DateTimeOffset.MinValue;
     }
 
     /// <summary>

@@ -33,6 +33,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
     private GcStats _lastGc;
     private ThreadPoolStats _lastTp;
 
+/// <inheritdoc/>
     public DefaultAppleMetricsProvider()
     {
         _currentProcess = Process.GetCurrentProcess();
@@ -40,12 +41,14 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         _lastTotalProcessorTime = _currentProcess.TotalProcessorTime;
         _ = RuntimeCounters.Instance; // ensure runtime counters listener is initialized
         var now = DateTimeOffset.UtcNow;
-        _lastCpuSampleAt = now;
-        _lastMemSampleAt = now;
-        _lastGcSampleAt = now;
-        _lastTpSampleAt = now;
+        // Initialize all sample times to MinValue to force computation on first call
+        _lastCpuSampleAt = DateTimeOffset.MinValue;
+        _lastMemSampleAt = DateTimeOffset.MinValue;
+        _lastGcSampleAt = DateTimeOffset.MinValue;
+        _lastTpSampleAt = DateTimeOffset.MinValue;
     }
 
+/// <inheritdoc/>
     public ValueTask<CpuUsage> GetCpuUsageAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -141,6 +144,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+/// <inheritdoc/>
     public ValueTask<GcStats> GetGcStatsAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -174,6 +178,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+/// <inheritdoc/>
     public ValueTask<ThreadPoolStats> GetThreadPoolStatsAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -208,6 +213,10 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+    /// <summary>
+    /// Sets the sampling interval for metrics collection.
+    /// </summary>
+    /// <param name="interval">The desired sampling interval. If zero or negative, defaults to 1 millisecond.</param>
     // Sampling controls for mobile scenarios
     public void SetSamplingInterval(TimeSpan interval)
     {
@@ -221,6 +230,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+/// <inheritdoc/>
     public void OnAppForegrounded()
     {
         lock (_sync)
@@ -229,6 +239,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+/// <inheritdoc/>
     public void OnAppBackgrounded()
     {
         lock (_sync)
@@ -306,7 +317,7 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
     }
 
 #if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS
-    [DllImport("libc", SetLastError = true)]
+    [DllImport("libc", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern int sysctlbyname(string name, out ulong oldp, ref nuint oldlenp, IntPtr newp, nuint newlen);
 
     [DllImport("libSystem.dylib")]
