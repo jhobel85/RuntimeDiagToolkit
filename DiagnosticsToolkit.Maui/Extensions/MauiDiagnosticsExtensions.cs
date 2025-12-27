@@ -36,7 +36,7 @@ public static class MauiDiagnosticsExtensions
                 android.OnStop(activity => Background());
             });
 #endif
-#if IOS || MACCATALYST
+#if IOS
             events.AddiOS(ios =>
             {
                 ios.WillEnterForeground(app => Foreground());
@@ -44,6 +44,8 @@ public static class MauiDiagnosticsExtensions
                 ios.DidEnterBackground(app => Background());
                 ios.OnResignActivation(app => Background());
             });
+#endif
+#if MACCATALYST
             events.AddMacCatalyst(mac =>
             {
                 mac.WillEnterForeground(app => Foreground());

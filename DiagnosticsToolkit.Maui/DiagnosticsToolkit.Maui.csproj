@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DiagnosticsToolkit\DiagnosticsToolkit.csproj" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.1" />
   </ItemGroup>
 
 </Project>
