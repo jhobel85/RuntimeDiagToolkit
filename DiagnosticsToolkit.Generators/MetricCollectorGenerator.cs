@@ -107,6 +107,27 @@ public sealed class MetricCollectorAttribute : Attribute
     /// </summary>
     public bool TrackAllocations { get; set; } = false;
 }
+
+/// <summary>
+/// Represents execution metrics collected for a method.
+/// </summary>
+public class MethodMetrics
+{
+    /// <summary>Gets the method name.</summary>
+    public string MethodName { get; set; } = string.Empty;
+
+    /// <summary>Gets the total number of calls.</summary>
+    public int CallCount { get; set; }
+
+    /// <summary>Gets total execution time in milliseconds.</summary>
+    public long TotalExecutionTimeMs { get; set; }
+
+    /// <summary>Gets average execution time in milliseconds.</summary>
+    public decimal AverageExecutionTimeMs { get; set; }
+
+    /// <summary>Gets the number of exceptions.</summary>
+    public int ExceptionCount { get; set; }
+}
 ";
     }
 

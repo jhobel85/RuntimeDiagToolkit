@@ -4,6 +4,8 @@
 
 **DiagnosticsToolkit.Generators** is a Roslyn source generator that automatically generates metric collection code for methods decorated with the `[MetricCollector]` attribute. This reduces boilerplate and enables developers to easily add performance monitoring to their code.
 
+The existing [MetricCollector] generator only tracks method execution metrics (timing, call count, exceptions)
+
 ## Installation
 
 Add the generator NuGet package as an analyzer to your project:
