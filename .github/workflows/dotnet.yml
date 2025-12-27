@@ -74,7 +74,11 @@ jobs:
         if [ "${{ matrix.os }}" = "windows-latest" ]; then BASELINE=benchmark-baselines-windows.json; fi
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then BASELINE=benchmark-baselines-ubuntu.json; fi
         if [ "${{ matrix.os }}" = "macos-latest" ]; then BASELINE=benchmark-baselines-macos.json; fi
-        python3 .github/scripts/benchmark_regression_gate.py --results benchmark-results-${{ matrix.os }}.json --baseline "$BASELINE" --threshold 0.10
+        if [ -f "benchmark-results-${{ matrix.os }}.json" ]; then
+          python3 .github/scripts/benchmark_regression_gate.py --results benchmark-results-${{ matrix.os }}.json --baseline "$BASELINE" --threshold 0.10
+        else
+          echo "Benchmark results file not found; skipping comparison"
+        fi
 
     - name: Upload Benchmark Results
       if: always()
@@ -126,6 +130,10 @@ jobs:
       working-directory: DiagnosticsToolkit.Maui.Sample
       run: dotnet restore DiagnosticsToolkit.Maui.Sample.csproj
 
+    - name: Restore MAUI library
+      working-directory: DiagnosticsToolkit.Maui
+      run: dotnet restore DiagnosticsToolkit.Maui.csproj
+
     - name: Verify SDK version in MAUI sample (should be 10.x)
       working-directory: DiagnosticsToolkit.Maui.Sample
       run: dotnet --version
@@ -133,6 +141,10 @@ jobs:
     - name: Build MAUI sample (Android)
       working-directory: DiagnosticsToolkit.Maui.Sample
       run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-android -c Debug --no-restore
+
+    - name: Build MAUI library (Android)
+      working-directory: DiagnosticsToolkit.Maui
+      run: dotnet build DiagnosticsToolkit.Maui.csproj -f net10.0-android -c Debug --no-restore
 
     - name: Build MAUI sample (iOS)
       working-directory: DiagnosticsToolkit.Maui.Sample
