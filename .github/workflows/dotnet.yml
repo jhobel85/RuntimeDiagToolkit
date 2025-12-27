@@ -87,11 +87,6 @@ jobs:
       with:
         dotnet-version: '10.x'
 
-    - name: Setup .NET 9 for core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.x'
-
     - name: Install MAUI workloads (iOS, MacCatalyst, Android)
       run: |
         dotnet workload install ios maccatalyst android
@@ -100,6 +95,10 @@ jobs:
     - name: Restore MAUI sample
       working-directory: DiagnosticsToolkit.Maui.Sample
       run: dotnet restore DiagnosticsToolkit.Maui.Sample.csproj
+
+    - name: Verify SDK version in MAUI sample (should be 10.x)
+      working-directory: DiagnosticsToolkit.Maui.Sample
+      run: dotnet --version
 
     - name: Build MAUI sample (Android)
       working-directory: DiagnosticsToolkit.Maui.Sample
@@ -112,6 +111,11 @@ jobs:
     - name: Build MAUI sample (MacCatalyst)
       working-directory: DiagnosticsToolkit.Maui.Sample
       run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-maccatalyst -c Debug --no-restore
+
+    - name: Setup .NET 9 for core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.x'
 
     - name: Restore dependencies
       run: dotnet restore RuntimeDiagToolkit.sln
