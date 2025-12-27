@@ -46,8 +46,13 @@ public static class MauiDiagnosticsExtensions
             });
 #endif
 #if MACCATALYST
-            // Update to use the correct method for MacCatalyst
-            builder.AddMacCatalyst(); // Ensure this method exists in your context
+            events.AddMacCatalyst(mac =>
+            {
+                mac.WillEnterForeground(app => Foreground());
+                mac.OnActivated(app => Foreground());
+                mac.DidEnterBackground(app => Background());
+                mac.OnResignActivation(app => Background());
+            });
 #else
     // Handle other platforms
 #endif
