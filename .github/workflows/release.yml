@@ -6,52 +6,102 @@ on:
       - 'v*'
 
 jobs:
-  build-and-release:
+  core-packages:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
 
-    - name: Restore dependencies
-      run: dotnet restore RuntimeDiagToolkit.sln
+      - name: Restore dependencies (non-MAUI)
+        run: |
+          dotnet restore DiagnosticsToolkit/DiagnosticsToolkit.csproj
+          dotnet restore DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj
+          dotnet restore DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj
+          dotnet restore DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj
+          dotnet restore DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj
 
-    - name: Build
-      run: dotnet build RuntimeDiagToolkit.sln --configuration Release --no-restore
+      - name: Build (non-MAUI)
+        run: |
+          dotnet build DiagnosticsToolkit/DiagnosticsToolkit.csproj --configuration Release --no-restore
+          dotnet build DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj --configuration Release --no-restore
+          dotnet build DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj --configuration Release --no-restore
+          dotnet build DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj --configuration Release --no-restore
 
-    - name: Run Tests
-      run: dotnet test DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-build
+      - name: Run Tests
+        run: dotnet test DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-build
 
-    - name: Pack NuGet packages
-      run: |
-        mkdir -p ./nupkg
-        dotnet pack DiagnosticsToolkit/DiagnosticsToolkit.csproj -c Release -o ./nupkg
-        dotnet pack DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj -c Release -o ./nupkg
-        dotnet pack DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj -c Release -o ./nupkg
-        dotnet pack DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj -c Release -o ./nupkg
-        dotnet pack DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj -c Release -o ./nupkg
+      - name: Pack NuGet packages (non-MAUI)
+        run: |
+          mkdir -p ./nupkg
+          dotnet pack DiagnosticsToolkit/DiagnosticsToolkit.csproj -c Release -o ./nupkg
+          dotnet pack DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj -c Release -o ./nupkg
+          dotnet pack DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj -c Release -o ./nupkg
+          dotnet pack DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj -c Release -o ./nupkg
 
-    - name: Push to GitHub Packages
-      run: |
-        dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
-      continue-on-error: true
+      - name: Push to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+        continue-on-error: true
 
-    - name: Create GitHub Release (gh CLI, inline notes)
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |      
-        gh release create "${{ github.ref_name }}" \
-        --title "Release ${{ github.ref_name }}" \
-        --notes "Automated release of version ${{ github.ref_name }}."
+      - name: Create GitHub Release (gh CLI, inline notes)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+          --title "Release ${{ github.ref_name }}" \
+          --notes "Automated release of version ${{ github.ref_name }}."
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: nupkg
-        path: ./nupkg/
-        retention-days: 30
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg-core
+          path: ./nupkg/
+          retention-days: 30
+
+  maui-packages:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET (10, prerelease for MAUI Android)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI workloads
+        run: |
+          dotnet workload install maui android
+
+      - name: Restore MAUI
+        run: |
+          dotnet restore DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj
+
+      - name: Build MAUI
+        run: |
+          dotnet build DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj --configuration Release --no-restore
+
+      - name: Pack MAUI
+        run: |
+          mkdir -p ./nupkg-maui
+          dotnet pack DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj -c Release -o ./nupkg-maui
+
+      - name: Push MAUI to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkg-maui/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+        continue-on-error: true
+
+      - name: Upload MAUI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg-maui
+          path: ./nupkg-maui/
+          retention-days: 30

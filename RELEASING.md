@@ -13,7 +13,7 @@ We follow [Semantic Versioning](https://semver.org/):
 ## Building NuGet Packages Locally
 
 ### Prerequisites
-- .NET 8 SDK
+- .NET 9 SDK
 - GitHub.com account (for publishing)
 
 ### Build Release Packages
@@ -82,9 +82,25 @@ dotnet nuget push ./nupkg/DiagnosticsToolkit.Generators.1.1.0.nupkg --api-key YO
 dotnet nuget push ./nupkg/DiagnosticsToolkit.Cli.1.1.0.nupkg --api-key YOUR_GITHUB_TOKEN --source https://nuget.pkg.github.com/jhobe85/index.json
 ```
 
+#### MAUI Packaging (Windows/macOS only)
+```bash
+# Prereqs: .NET 10 SDK (preview may be required) and MAUI workloads
+dotnet workload install maui android
+
+# Build + pack
+dotnet build DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj -c Release
+dotnet pack DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj -c Release -o ./nupkg
+
+# Publish MAUI package
+dotnet nuget push ./nupkg/DiagnosticsToolkit.Maui.<VERSION>.nupkg --api-key YOUR_GITHUB_TOKEN --source https://nuget.pkg.github.com/jhobe85/index.json
+```
+
 **Note**: Generate a GitHub Personal Access Token with `write:packages` permission from https://github.com/settings/tokens
 
 ## GitHub Release Workflow - Automated steps via CI Runner
+- Core packages build on Ubuntu.
+- MAUI packages build on Windows with MAUI workloads.
+- Publishing uses `GITHUB_TOKEN` with `--skip-duplicate`.
 
 Git tag push will automatically build, test, and publish all packages to GitHub Packages with zero manual intervention.
 
