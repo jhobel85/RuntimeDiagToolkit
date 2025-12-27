@@ -6,28 +6,29 @@ Build a cross‑platform diagnostics toolkit that exposes a unified API for coll
 
 The toolkit must include an AI‑assisted developer workflow that helps identify performance issues and suggests optimizations.
 
-**## Planning and project overview**
- [x] Scaffold (skeleton) .NET 8 multi-target library
- [x] Define IRuntimeMetricsProvider API
- [x] Add core API models (CPU, Memory, GC, ThreadPool)
- [x] Build platform dispatcher (DI-friendly factory)
- [x] Create DiagnosticsToolkit.AspNetCore package
- [x] Implement Windows metrics provider (ETW + Process)
- [x] Implement Linux metrics provider (/proc + cgroup v2)
- [x] Implement macOS/iOS provider (process + sysctl + vm_statistics64 for memory pressure)
- [x] Implement Android metrics provider (/proc sampling + runtime counters)
- [x] Create DiagnosticsToolkit.Maui package
- [x] BenchmarkDotNet suite (CPU, Memory, GC, ThreadPool)
- [x] Cross-platform unit tests (xUnit)
- [x] GitHub Actions CI workflow (Windows, Linux, macOS)
- [x] Roslyn source generator for collectors
- [x] Performance hardening (allocation-free ValueStopwatch, stack-based span readers, volatile fields instead of ConcurrentDictionary)
- [x] Optimize mobile implementations (battery, GC, background)
- [x] AI diagnostics analyzer (issue detection + suggestions)
- [x] CLI: diagnostics-ai analyze --input metrics.json
- [x] AI-generated guidance (samples, integrations, troubleshooting)
- [x] CI benchmark regression gate
- [x] Deliverables packaging
+## Planning and project overview
+
+- [x] Scaffold (skeleton) .NET 8 multi-target library
+- [x] Define IRuntimeMetricsProvider API
+- [x] Add core API models (CPU, Memory, GC, ThreadPool)
+- [x] Build platform dispatcher (DI-friendly factory)
+- [x] Create DiagnosticsToolkit.AspNetCore package
+- [x] Implement Windows metrics provider (ETW + Process)
+- [x] Implement Linux metrics provider (/proc + cgroup v2)
+- [x] Implement macOS/iOS provider (process + sysctl + vm_statistics64 for memory pressure)
+- [x] Implement Android metrics provider (/proc sampling + runtime counters)
+- [x] Create DiagnosticsToolkit.Maui package
+- [x] BenchmarkDotNet suite (CPU, Memory, GC, ThreadPool)
+- [x] Cross-platform unit tests (xUnit)
+- [x] GitHub Actions CI workflow (Windows, Linux, macOS)
+- [x] Roslyn source generator for collectors
+- [x] Performance hardening (allocation-free ValueStopwatch, stack-based span readers, volatile fields instead of ConcurrentDictionary)
+- [x] Optimize mobile implementations (battery, GC, background)
+- [x] AI diagnostics analyzer (issue detection + suggestions)
+- [x] CLI: diagnostics-ai analyze --input metrics.json
+- [x] AI-generated guidance (samples, integrations, troubleshooting)
+- [x] CI benchmark regression gate
+- [x] Deliverables packaging
 
 ---
 

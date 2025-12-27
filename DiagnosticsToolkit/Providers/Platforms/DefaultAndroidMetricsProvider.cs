@@ -37,6 +37,10 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
     private GcStats _lastGc;
     private ThreadPoolStats _lastTp;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DefaultAndroidMetricsProvider"/> class.
+    /// Initializes the current process reference, CPU tick baselines, and runtime counters listener.
+    /// </summary>
     public DefaultAndroidMetricsProvider()
     {
         _currentProcess = Process.GetCurrentProcess();
@@ -50,6 +54,11 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         _lastTpSampleAt = now;
     }
 
+    /// <summary>
+    /// Gets the current CPU usage metrics asynchronously.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task that returns the current CPU usage information.</returns>
     public ValueTask<CpuUsage> GetCpuUsageAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -118,6 +127,7 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+    /// <inheritdoc/>
     public ValueTask<MemorySnapshot> GetMemorySnapshotAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -147,7 +157,8 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
-    public ValueTask<GcStats> GetGcStatsAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc/>
+    public ValueTask<GcStats> GetGcStatsAsync(CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
         lock (_sync)
@@ -180,6 +191,7 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+    /// <inheritdoc/>
     public ValueTask<ThreadPoolStats> GetThreadPoolStatsAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -215,6 +227,7 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
     }
 
     // Sampling controls for mobile scenarios
+    /// <inheritdoc/>
     public void SetSamplingInterval(TimeSpan interval)
     {
         if (interval <= TimeSpan.Zero)
@@ -228,6 +241,7 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+    /// <inheritdoc/>
     public void OnAppForegrounded()
     {
         lock (_sync)
@@ -238,6 +252,7 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+    /// <inheritdoc/>
     public void OnAppBackgrounded()
     {
         lock (_sync)
@@ -249,6 +264,7 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
     }
 
     // Introspection helpers for samples
+    /// <inheritdoc/>
     public TimeSpan GetCurrentSamplingInterval()
     {
         lock (_sync)
@@ -257,6 +273,7 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+    /// <inheritdoc/>
     public bool IsBackground => _isBackground;
 
     private static bool TryReadCpuSample(out long idleTicks, out long totalTicks)

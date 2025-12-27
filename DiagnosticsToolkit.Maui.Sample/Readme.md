@@ -1,3 +1,6 @@
+## Install
+dotnet workload install maui-android
+
 ## Battery usage:
 
 Configurable SetSamplingInterval() to tune refresh cadence
