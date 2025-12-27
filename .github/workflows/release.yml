@@ -32,6 +32,7 @@ jobs:
           dotnet build DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj --configuration Release --no-restore
           dotnet build DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj --configuration Release --no-restore
           dotnet build DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj --configuration Release --no-restore
+          dotnet build DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-restore
 
       - name: Run Tests
         run: dotnet test DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-build
