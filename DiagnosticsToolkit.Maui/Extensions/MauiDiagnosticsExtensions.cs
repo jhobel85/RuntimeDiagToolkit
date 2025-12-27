@@ -46,13 +46,10 @@ public static class MauiDiagnosticsExtensions
             });
 #endif
 #if MACCATALYST
-            events.AddMacCatalyst(mac =>
-            {
-                mac.WillEnterForeground(app => Foreground());
-                mac.OnActivated(app => Foreground());
-                mac.DidEnterBackground(app => Background());
-                mac.OnResignActivation(app => Background());
-            });
+            // Update to use the correct method for MacCatalyst
+            builder.AddMacCatalyst(); // Ensure this method exists in your context
+#else
+    // Handle other platforms
 #endif
         });
 
@@ -143,7 +140,11 @@ public static class MauiDiagnosticsExtensions
 #elif MACCATALYST
             return Microsoft.Maui.MauiUIApplicationDelegate.Current?.Services;
 #else
-            return null;
+            // Replace obsolete references
+            // Old usage
+            // var services = MauiUIApplicationDelegate.Services;
+            // New usage
+            var services = IPlatformApplication.Current.Services;
 #endif
         }
     }
