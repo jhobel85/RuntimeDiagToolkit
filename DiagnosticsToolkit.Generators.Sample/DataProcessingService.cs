@@ -23,7 +23,7 @@ public class DataProcessingService
     [MetricCollector]
     public async Task<List<int>> QueryDatabaseAsync(string query)
     {
-        return await DataProcessingService_QueryDatabaseAsync_Metrics.MeasureAsync(async () =>
+        return await DataProcessingService_QueryDatabaseAsync_Metrics.MeasureQueryDatabaseAsyncAsync(async () =>
         {
             await Task.Delay(_random.Next(10, 100));
 
@@ -41,7 +41,7 @@ public class DataProcessingService
     [MetricCollector]
     public void ProcessData(List<int> data)
     {
-        DataProcessingService_ProcessData_Metrics.Measure(() =>
+        DataProcessingService_ProcessData_Metrics.MeasureProcessData(() =>
         {
             foreach (var item in data)
             {
@@ -57,7 +57,7 @@ public class DataProcessingService
     [MetricCollector]
     public List<string> TransformData(List<int> items)
     {
-        return DataProcessingService_TransformData_Metrics.Measure(() =>
+        return DataProcessingService_TransformData_Metrics.MeasureTransformData(() =>
         {
             return items.Select(i => $"Item_{i}").ToList();
         });

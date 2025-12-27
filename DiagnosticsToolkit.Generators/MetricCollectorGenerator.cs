@@ -137,6 +137,7 @@ public class MethodMetrics
         var ns = method.Namespace != "GeneratedCode" ? method.Namespace : "DiagnosticsToolkit.Generators.Sample";
 
         sb.AppendLine("using System;");
+        sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Diagnostics;");
         sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine("using DiagnosticsToolkit.Generators;");
@@ -248,6 +249,32 @@ public class MethodMetrics
         sb.AppendLine("            throw;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
+        sb.AppendLine();
+        // Per-method convenience overloads to hide helper type name at call sites - syntactically nicer
+        var rt = method.ReturnType.Trim();
+        if (method.IsAsync)
+        {
+            if (rt.StartsWith("Task<"))
+            {
+                var inner = rt.Substring(5, rt.Length - 6);
+                sb.AppendLine($"    public static Task<{inner}> Measure{method.MethodName}Async(Func<Task<{inner}>> func) => MeasureAsync(func);");
+            }
+            else
+            {
+                sb.AppendLine($"    public static Task Measure{method.MethodName}Async(Func<Task> func) => MeasureAsync(func);");
+            }
+        }
+        else
+        {
+            if (rt == "void")
+            {
+                sb.AppendLine($"    public static void Measure{method.MethodName}(Action action) => Measure(action);");
+            }
+            else
+            {
+                sb.AppendLine($"    public static {rt} Measure{method.MethodName}(Func<{rt}> func) => Measure(func);");
+            }
+        }
         sb.AppendLine("}");
 
         return sb.ToString();
