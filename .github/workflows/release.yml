@@ -119,6 +119,12 @@ jobs:
 #          mkdir -p ../../nupkg-maui
 #          dotnet pack DiagnosticsToolkit.Maui.csproj -f net10.0-ios -c Release -o ../../nupkg-maui --no-build
 
+#      - name: Pack MAUI library (MacCatalyst)
+#        working-directory: DiagnosticsToolkit.Maui
+#        #run: |
+#          mkdir -p ../../nupkg-maui
+#          dotnet pack DiagnosticsToolkit.Maui.csproj -f net10.0-maccatalyst -c Release -o ../../nupkg-maui --no-build
+
       - name: Push MAUI to GitHub Packages
         run: |
           dotnet nuget push ./nupkg-maui/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
