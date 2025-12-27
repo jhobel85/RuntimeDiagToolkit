@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-test:
     runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_MULTILEVEL_LOOKUP: 0
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -29,8 +31,8 @@ jobs:
         dotnet workload install android wasm-tools
         dotnet workload restore
 
-    - name: Restore dependencies
-      run: dotnet restore RuntimeDiagToolkit.sln
+    - name: Restore test project only (avoid MAUI TFMs)
+      run: dotnet restore DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj
 
     - name: Build (core + tests only)
       run: dotnet build DiagnosticsToolkit.Tests/DiagnosticsToolkit.Tests.csproj --configuration Release --no-restore
@@ -64,6 +66,8 @@ jobs:
 
   code-quality:
     runs-on: ubuntu-latest
+    env:
+      DOTNET_MULTILEVEL_LOOKUP: 0
     steps:
     - uses: actions/checkout@v4
 
@@ -79,13 +83,15 @@ jobs:
 
   maui-macos:
     runs-on: macos-latest
+    env:
+      DOTNET_MULTILEVEL_LOOKUP: 0
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup .NET 10 for MAUI
+    - name: Setup .NET 10 for MAUI (from local global.json)
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.x'
+        global-json-file: DiagnosticsToolkit.Maui.Sample/global.json
 
     - name: Install MAUI workloads (iOS, MacCatalyst, Android)
       run: |
@@ -117,8 +123,8 @@ jobs:
       with:
         dotnet-version: '9.x'
 
-    - name: Restore dependencies
-      run: dotnet restore RuntimeDiagToolkit.sln
+    - name: Restore core library only (avoid MAUI TFMs)
+      run: dotnet restore DiagnosticsToolkit/DiagnosticsToolkit.csproj
 
     - name: Build (core library only)
       run: dotnet build DiagnosticsToolkit/DiagnosticsToolkit.csproj --configuration Release --no-restore
