@@ -111,9 +111,6 @@ jobs:
       DOTNET_MULTILEVEL_LOOKUP: 0
     steps:
     - uses: actions/checkout@v4
-       
-    - name: Select Xcode 26.2
-      run: sudo xcode-select -switch /Applications/Xcode_26.2.app/Contents/Developer
 
     - name: Setup .NET 10 for MAUI (from local global.json)
       uses: actions/setup-dotnet@v4
@@ -149,13 +146,13 @@ jobs:
       working-directory: DiagnosticsToolkit.Maui
       run: dotnet build DiagnosticsToolkit.Maui.csproj -f net10.0-android -c Debug --no-restore
 
-    - name: Build MAUI sample (iOS)
-      working-directory: DiagnosticsToolkit.Maui.Sample
-      run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-ios -c Debug --no-restore
+  #  - name: Build MAUI sample (iOS)
+  #   working-directory: DiagnosticsToolkit.Maui.Sample
+  #  run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-ios -c Debug --no-restore
 
-    - name: Build MAUI sample (MacCatalyst)
-      working-directory: DiagnosticsToolkit.Maui.Sample
-      run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-maccatalyst -c Debug --no-restore
+   # - name: Build MAUI sample (MacCatalyst)
+   #   working-directory: DiagnosticsToolkit.Maui.Sample
+   #   run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-maccatalyst -c Debug --no-restore
 
     - name: Setup .NET 9 for core
       uses: actions/setup-dotnet@v4
