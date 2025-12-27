@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -138,34 +138,24 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         idleTicks = 0;
         totalTicks = 0;
 
+        Span<byte> buffer = stackalloc byte[256]; // First line of /proc/stat fits comfortably.
         try
         {
-            var line = File.ReadLines("/proc/stat").FirstOrDefault();
-            if (line is null || !line.StartsWith("cpu "))
+            using var stream = File.OpenRead("/proc/stat");
+            var read = stream.Read(buffer);
+            if (read <= 0)
             {
                 return false;
             }
 
-            var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 5)
+            var span = buffer[..read];
+            var newlineIndex = span.IndexOf((byte)'\n');
+            if (newlineIndex > 0)
             {
-                return false;
+                span = span[..newlineIndex];
             }
 
-            long user = ParseLong(parts, 1);
-            long nice = ParseLong(parts, 2);
-            long system = ParseLong(parts, 3);
-            long idle = ParseLong(parts, 4);
-            long iowait = ParseLong(parts, 5);
-            long irq = ParseLong(parts, 6);
-            long softirq = ParseLong(parts, 7);
-            long steal = ParseLong(parts, 8);
-            long guest = ParseLong(parts, 9);
-            long guestNice = ParseLong(parts, 10);
-
-            idleTicks = idle + iowait;
-            totalTicks = user + nice + system + idle + iowait + irq + softirq + steal + guest + guestNice;
-            return totalTicks > 0;
+            return TryParseCpuLine(span, out idleTicks, out totalTicks);
         }
         catch (IOException)
         {
@@ -175,10 +165,78 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         {
             return false;
         }
-        catch (FormatException)
+    }
+
+    private static bool TryParseCpuLine(ReadOnlySpan<byte> line, out long idleTicks, out long totalTicks)
+    {
+        idleTicks = 0;
+        totalTicks = 0;
+
+        if (!line.StartsWith("cpu "u8))
         {
             return false;
         }
+
+        line = line[4..];
+
+        if (!TryReadNextLong(ref line, out var user, required: true) ||
+            !TryReadNextLong(ref line, out var nice, required: true) ||
+            !TryReadNextLong(ref line, out var system, required: true) ||
+            !TryReadNextLong(ref line, out var idle, required: true) ||
+            !TryReadNextLong(ref line, out var iowait))
+        {
+            return false;
+        }
+
+        TryReadNextLong(ref line, out var irq);
+        TryReadNextLong(ref line, out var softirq);
+        TryReadNextLong(ref line, out var steal);
+        TryReadNextLong(ref line, out var guest);
+        TryReadNextLong(ref line, out var guestNice);
+
+        idleTicks = idle + iowait;
+        totalTicks = user + nice + system + idle + iowait + irq + softirq + steal + guest + guestNice;
+        return totalTicks > 0;
+    }
+
+    private static bool TryReadNextLong(ref ReadOnlySpan<byte> span, out long value, bool required = false)
+    {
+        value = 0;
+
+        var index = 0;
+        while (index < span.Length && span[index] == (byte)' ')
+        {
+            index++;
+        }
+
+        if (index >= span.Length)
+        {
+            span = ReadOnlySpan<byte>.Empty;
+            return !required;
+        }
+
+        long result = 0;
+        var start = index;
+        for (; index < span.Length; index++)
+        {
+            var b = span[index];
+            if (b < (byte)'0' || b > (byte)'9')
+            {
+                break;
+            }
+
+            result = (result * 10) + (b - (byte)'0');
+        }
+
+        if (index == start)
+        {
+            span = span[index..];
+            return !required;
+        }
+
+        value = result;
+        span = span[index..];
+        return true;
     }
 
     private static (long Total, long Available) ReadMemInfo()
@@ -190,13 +248,14 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         {
             foreach (var line in File.ReadLines("/proc/meminfo"))
             {
-                if (line.StartsWith("MemTotal:"))
+                var span = line.AsSpan();
+                if (span.StartsWith("MemTotal:", StringComparison.Ordinal))
                 {
-                    total = ParseMemInfoValue(line);
+                    total = ParseMemInfoValue(span);
                 }
-                else if (line.StartsWith("MemAvailable:"))
+                else if (span.StartsWith("MemAvailable:", StringComparison.Ordinal))
                 {
-                    available = ParseMemInfoValue(line);
+                    available = ParseMemInfoValue(span);
                 }
 
                 if (total > 0 && available > 0)
@@ -228,22 +287,39 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         return (int)Math.Clamp((double)usedBytes / totalBytes * 100.0, 0, 100);
     }
 
-    private static long ParseMemInfoValue(string line)
+    private static long ParseMemInfoValue(ReadOnlySpan<char> line)
     {
-        var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length >= 2 && long.TryParse(parts[1], out var valueKb))
-        {
-            return valueKb * 1024;
-        }
-        return 0;
-    }
-
-    private static long ParseLong(string[] parts, int index)
-    {
-        if (index >= parts.Length)
+        var colonIndex = line.IndexOf(':');
+        if (colonIndex < 0 || colonIndex + 1 >= line.Length)
         {
             return 0;
         }
-        return long.TryParse(parts[index], out var value) ? value : 0;
+
+        var remainder = line[(colonIndex + 1)..];
+
+        var start = 0;
+        while (start < remainder.Length && remainder[start] == ' ')
+        {
+            start++;
+        }
+
+        var end = start;
+        while (end < remainder.Length && char.IsDigit(remainder[end]))
+        {
+            end++;
+        }
+
+        var valueSpan = remainder.Slice(start, end - start);
+        if (valueSpan.IsEmpty)
+        {
+            return 0;
+        }
+
+        if (!long.TryParse(valueSpan, NumberStyles.Integer, CultureInfo.InvariantCulture, out var valueKb))
+        {
+            return 0;
+        }
+
+        return valueKb * 1024;
     }
 }
