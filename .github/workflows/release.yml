@@ -87,10 +87,6 @@ jobs:
         working-directory: DiagnosticsToolkit.Maui.Sample
         run: dotnet workload restore
 
-      - name: Restore MAUI sample
-        working-directory: DiagnosticsToolkit.Maui.Sample
-        run: dotnet restore DiagnosticsToolkit.Maui.Sample.csproj
-
       - name: Restore MAUI library
         working-directory: DiagnosticsToolkit.Maui
         run: dotnet restore DiagnosticsToolkit.Maui.csproj      
