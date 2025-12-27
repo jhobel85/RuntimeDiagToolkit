@@ -214,7 +214,7 @@ The toolkit must include an AI‑assisted developer workflow that helps identify
  [x] BenchmarkDotNet suite (CPU, Memory, GC, ThreadPool)
  [x] Cross-platform unit tests (xUnit)
  [x] GitHub Actions CI workflow (Windows, Linux, macOS)
- [] Roslyn source generator for collectors
+ [x] Roslyn source generator for collectors
  [] Performance hardening (allocation-free, spans)
  [] Optimize mobile implementations (battery, GC, background)
  [x] AI diagnostics analyzer (issue detection + suggestions)
