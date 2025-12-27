@@ -103,23 +103,11 @@ jobs:
   #     working-directory: DiagnosticsToolkit.Maui
   #     run: dotnet build DiagnosticsToolkit.Maui.csproj -f net10.0-maccatalyst -c Release --no-restore
 
-      - name: Pack MAUI library (Android)
+      - name: Pack MAUI library (all platforms)
         working-directory: DiagnosticsToolkit.Maui
         run: |
           mkdir -p ../../nupkg-maui
-          dotnet pack DiagnosticsToolkit.Maui.csproj --framework net10.0-android -c Release -o ../../nupkg-maui
-
-#      - name: Pack MAUI library (iOS)
-#        working-directory: DiagnosticsToolkit.Maui
-#        #run: |
-#          mkdir -p ../../nupkg-maui
-#          dotnet pack DiagnosticsToolkit.Maui.csproj --framework net10.0-ios -c Release -o ../../nupkg-maui
-
-#      - name: Pack MAUI library (MacCatalyst)
-#        working-directory: DiagnosticsToolkit.Maui
-#        #run: |
-#          mkdir -p ../../nupkg-maui
-#          dotnet pack DiagnosticsToolkit.Maui.csproj --framework net10.0-maccatalyst -c Release -o ../../nupkg-maui
+          dotnet pack DiagnosticsToolkit.Maui.csproj -c Release -o ../../nupkg-maui
 
       - name: Push MAUI to GitHub Packages
         run: |
