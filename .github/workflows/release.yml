@@ -79,13 +79,15 @@ jobs:
           global-json-file: DiagnosticsToolkit.Maui/global.json
 
       - name: Install MAUI workloads (meta)
-        run: |
-          dotnet workload install maui
-          dotnet workload restore
-          
+        run: dotnet workload install maui
+
+      - name: Restore MAUI workloads
+        working-directory: DiagnosticsToolkit.Maui
+        run: dotnet workload restore
+
       - name: Restore MAUI library
         working-directory: DiagnosticsToolkit.Maui
-        run: dotnet restore DiagnosticsToolkit.Maui.csproj      
+        run: dotnet restore DiagnosticsToolkit.Maui.csproj     
 
       - name: Check MAUI version
         working-directory: DiagnosticsToolkit.Maui
