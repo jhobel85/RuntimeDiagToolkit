@@ -102,6 +102,11 @@ jobs:
   #   - name: Build MAUI library (MacCatalyst)
   #     working-directory: DiagnosticsToolkit.Maui
   #     run: dotnet build DiagnosticsToolkit.Maui.csproj -f net10.0-maccatalyst -c Release --no-restore
+  
+      - name: Check MAUI version
+        run: |
+          dotnet --version
+          dotnet list package --include-transitive
 
       - name: Pack MAUI library (all platforms)
         working-directory: DiagnosticsToolkit.Maui
