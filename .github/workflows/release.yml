@@ -93,11 +93,7 @@ jobs:
 
       - name: Restore MAUI library
         working-directory: DiagnosticsToolkit.Maui
-        run: dotnet restore DiagnosticsToolkit.Maui.csproj
-
-      - name: Build MAUI sample (Android)
-        working-directory: DiagnosticsToolkit.Maui.Sample
-        run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-android -c Release --no-restore
+        run: dotnet restore DiagnosticsToolkit.Maui.csproj      
 
       - name: Build MAUI library (Android)
         working-directory: DiagnosticsToolkit.Maui
@@ -111,11 +107,17 @@ jobs:
   #     working-directory: DiagnosticsToolkit.Maui
   #     run: dotnet build DiagnosticsToolkit.Maui.csproj -f net10.0-maccatalyst -c Release --no-restore
 
-      - name: Pack MAUI library
+      - name: Pack MAUI library (Android)
         working-directory: DiagnosticsToolkit.Maui
         run: |
           mkdir -p ../../nupkg-maui
-          dotnet pack DiagnosticsToolkit.Maui.csproj -c Release -o ../../nupkg-maui --no-build
+          dotnet pack DiagnosticsToolkit.Maui.csproj -f net10.0-android -c Release -o ../../nupkg-maui --no-build
+
+#      - name: Pack MAUI library (iOS)
+#        working-directory: DiagnosticsToolkit.Maui
+#        #run: |
+#          mkdir -p ../../nupkg-maui
+#          dotnet pack DiagnosticsToolkit.Maui.csproj -f net10.0-ios -c Release -o ../../nupkg-maui --no-build
 
       - name: Push MAUI to GitHub Packages
         run: |
