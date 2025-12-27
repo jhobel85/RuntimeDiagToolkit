@@ -19,118 +19,233 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
     private readonly Process _currentProcess;
     private long _lastIdleCpuTicks;
     private long _lastTotalCpuTicks;
+    private readonly object _sync = new();
+
+    private TimeSpan _baseSamplingInterval = TimeSpan.FromMilliseconds(250);
+    private TimeSpan _currentSamplingInterval;
+    private static readonly TimeSpan MaxBackoff = TimeSpan.FromSeconds(5);
+    private bool _isBackground;
+    private int _lowActivityStreak;
+
+    private DateTimeOffset _lastCpuSampleAt;
+    private DateTimeOffset _lastMemSampleAt;
+    private DateTimeOffset _lastGcSampleAt;
+    private DateTimeOffset _lastTpSampleAt;
+
+    private CpuUsage _lastCpu;
+    private MemorySnapshot _lastMem;
+    private GcStats _lastGc;
+    private ThreadPoolStats _lastTp;
 
     public DefaultAndroidMetricsProvider()
     {
         _currentProcess = Process.GetCurrentProcess();
         TryReadCpuSample(out _lastIdleCpuTicks, out _lastTotalCpuTicks);
         _ = RuntimeCounters.Instance; // initialize runtime counters listener
+        _currentSamplingInterval = _baseSamplingInterval;
+        var now = DateTimeOffset.UtcNow;
+        _lastCpuSampleAt = now;
+        _lastMemSampleAt = now;
+        _lastGcSampleAt = now;
+        _lastTpSampleAt = now;
     }
 
     public ValueTask<CpuUsage> GetCpuUsageAsync(CancellationToken cancellationToken = default)
     {
-        if (!TryReadCpuSample(out var idle, out var total))
+        var now = DateTimeOffset.UtcNow;
+        lock (_sync)
         {
-            throw new InvalidOperationException("/proc/stat is not available for CPU sampling on this device.");
-        }
-
-        double cpuPercent = 0;
-        if (_lastTotalCpuTicks > 0)
-        {
-            var totalDelta = total - _lastTotalCpuTicks;
-            var idleDelta = idle - _lastIdleCpuTicks;
-            if (totalDelta > 0)
+            if (_isBackground || now - _lastCpuSampleAt < _currentSamplingInterval)
             {
-                cpuPercent = (1.0 - ((double)idleDelta / totalDelta)) * 100.0;
+                return new ValueTask<CpuUsage>(_lastCpu);
             }
+
+            if (!TryReadCpuSample(out var idle, out var total))
+            {
+                throw new InvalidOperationException("/proc/stat is not available for CPU sampling on this device.");
+            }
+
+            double cpuPercent = 0;
+            if (_lastTotalCpuTicks > 0)
+            {
+                var totalDelta = total - _lastTotalCpuTicks;
+                var idleDelta = idle - _lastIdleCpuTicks;
+                if (totalDelta > 0)
+                {
+                    cpuPercent = (1.0 - ((double)idleDelta / totalDelta)) * 100.0;
+                }
+            }
+
+            _lastTotalCpuTicks = total;
+            _lastIdleCpuTicks = idle;
+            cpuPercent = Math.Clamp(cpuPercent, 0, 100);
+
+            var totalProcessorTime = _currentProcess.TotalProcessorTime;
+            _lastCpu = new CpuUsage
+            {
+                PercentageUsed = cpuPercent,
+                TotalProcessorTimeMs = (long)totalProcessorTime.TotalMilliseconds,
+                UserModeTimeMs = (long)_currentProcess.UserProcessorTime.TotalMilliseconds,
+                KernelModeTimeMs = (long)_currentProcess.PrivilegedProcessorTime.TotalMilliseconds,
+                ProcessorCount = Environment.ProcessorCount,
+                CollectedAt = now
+            };
+            _lastCpuSampleAt = now;
+
+            // Adaptive backoff: increase interval on sustained low CPU; reset on activity.
+            if (_isBackground || cpuPercent < 2.0)
+            {
+                _lowActivityStreak = Math.Min(_lowActivityStreak + 1, 10);
+            }
+            else
+            {
+                _lowActivityStreak = 0;
+            }
+
+            if (_isBackground)
+            {
+                // In background, exponential backoff up to MaxBackoff.
+                var factor = 1 << Math.Min(_lowActivityStreak, 4); // up to 16x
+                var next = TimeSpan.FromMilliseconds(Math.Min(_baseSamplingInterval.TotalMilliseconds * factor, MaxBackoff.TotalMilliseconds));
+                _currentSamplingInterval = next;
+            }
+            else
+            {
+                _currentSamplingInterval = _baseSamplingInterval;
+            }
+
+            return new ValueTask<CpuUsage>(_lastCpu);
         }
-
-        _lastTotalCpuTicks = total;
-        _lastIdleCpuTicks = idle;
-        cpuPercent = Math.Clamp(cpuPercent, 0, 100);
-
-        var totalProcessorTime = _currentProcess.TotalProcessorTime;
-
-        var result = new CpuUsage
-        {
-            PercentageUsed = cpuPercent,
-            TotalProcessorTimeMs = (long)totalProcessorTime.TotalMilliseconds,
-            UserModeTimeMs = (long)_currentProcess.UserProcessorTime.TotalMilliseconds,
-            KernelModeTimeMs = (long)_currentProcess.PrivilegedProcessorTime.TotalMilliseconds,
-            ProcessorCount = Environment.ProcessorCount,
-            CollectedAt = DateTimeOffset.UtcNow
-        };
-
-        return new ValueTask<CpuUsage>(result);
     }
 
     public ValueTask<MemorySnapshot> GetMemorySnapshotAsync(CancellationToken cancellationToken = default)
     {
-        var totalMemory = GC.GetTotalMemory(false);
-        var (totalSystem, availableSystem) = ReadMemInfo();
-
-        var result = new MemorySnapshot
+        var now = DateTimeOffset.UtcNow;
+        lock (_sync)
         {
-            TotalSystemMemoryBytes = totalSystem,
-            AvailableSystemMemoryBytes = availableSystem,
-            ProcessWorkingSetBytes = _currentProcess.WorkingSet64,
-            ProcessPrivateMemoryBytes = _currentProcess.PrivateMemorySize64,
-            ManagedHeapBytes = totalMemory,
-            ProcessVirtualMemoryBytes = _currentProcess.VirtualMemorySize64,
-            MemoryPressurePercentage = ComputeMemoryPressure(totalSystem, availableSystem),
-            CollectedAt = DateTimeOffset.UtcNow
-        };
+            if (_isBackground || now - _lastMemSampleAt < _currentSamplingInterval)
+            {
+                return new ValueTask<MemorySnapshot>(_lastMem);
+            }
 
-        return new ValueTask<MemorySnapshot>(result);
+            var totalMemory = GC.GetTotalMemory(false);
+            var (totalSystem, availableSystem) = ReadMemInfo();
+
+            _lastMem = new MemorySnapshot
+            {
+                TotalSystemMemoryBytes = totalSystem,
+                AvailableSystemMemoryBytes = availableSystem,
+                ProcessWorkingSetBytes = _currentProcess.WorkingSet64,
+                ProcessPrivateMemoryBytes = _currentProcess.PrivateMemorySize64,
+                ManagedHeapBytes = totalMemory,
+                ProcessVirtualMemoryBytes = _currentProcess.VirtualMemorySize64,
+                MemoryPressurePercentage = ComputeMemoryPressure(totalSystem, availableSystem),
+                CollectedAt = now
+            };
+            _lastMemSampleAt = now;
+            return new ValueTask<MemorySnapshot>(_lastMem);
+        }
     }
 
     public ValueTask<GcStats> GetGcStatsAsync(CancellationToken cancellationToken = default)
     {
-        var mem = GC.GetGCMemoryInfo();
-        double fragmentationPct = 0;
-        if (mem.HeapSizeBytes > 0 && mem.FragmentedBytes >= 0)
+        var now = DateTimeOffset.UtcNow;
+        lock (_sync)
         {
-            fragmentationPct = (double)mem.FragmentedBytes / mem.HeapSizeBytes * 100.0;
+            if (_isBackground || now - _lastGcSampleAt < _currentSamplingInterval)
+            {
+                return new ValueTask<GcStats>(_lastGc);
+            }
+
+            var mem = GC.GetGCMemoryInfo();
+            double fragmentationPct = 0;
+            if (mem.HeapSizeBytes > 0 && mem.FragmentedBytes >= 0)
+            {
+                fragmentationPct = (double)mem.FragmentedBytes / mem.HeapSizeBytes * 100.0;
+            }
+
+            _lastGc = new GcStats
+            {
+                Gen0CollectionCount = GC.CollectionCount(0),
+                Gen1CollectionCount = GC.CollectionCount(1),
+                Gen2CollectionCount = GC.CollectionCount(2),
+                TotalGcPauseMsPercentage = RuntimeCounters.Instance.TimeInGcPercent,
+                HeapFragmentationPercentage = fragmentationPct,
+                TotalAllocatedBytes = GC.GetTotalAllocatedBytes(),
+                IsGcConcurrentEnabled = !GCSettings.IsServerGC,
+                CollectedAt = now
+            };
+            _lastGcSampleAt = now;
+            return new ValueTask<GcStats>(_lastGc);
         }
-
-        var result = new GcStats
-        {
-            Gen0CollectionCount = GC.CollectionCount(0),
-            Gen1CollectionCount = GC.CollectionCount(1),
-            Gen2CollectionCount = GC.CollectionCount(2),
-            TotalGcPauseMsPercentage = RuntimeCounters.Instance.TimeInGcPercent,
-            HeapFragmentationPercentage = fragmentationPct,
-            TotalAllocatedBytes = GC.GetTotalAllocatedBytes(),
-            IsGcConcurrentEnabled = !GCSettings.IsServerGC,
-            CollectedAt = DateTimeOffset.UtcNow
-        };
-
-        return new ValueTask<GcStats>(result);
     }
 
     public ValueTask<ThreadPoolStats> GetThreadPoolStatsAsync(CancellationToken cancellationToken = default)
     {
-        ThreadPool.GetAvailableThreads(out int workerThreads, out int ioThreads);
-        ThreadPool.GetMinThreads(out int minWorkerThreads, out int minIoThreads);
-        ThreadPool.GetMaxThreads(out int maxWorkerThreads, out int maxIoThreads);
-
-        var queuedItems = RuntimeCounters.Instance.ThreadPoolQueueLength;
-        var completedItems = RuntimeCounters.Instance.ThreadPoolCompletedItemsCount;
-
-        var result = new ThreadPoolStats
+        var now = DateTimeOffset.UtcNow;
+        lock (_sync)
         {
-            WorkerThreadCount = ThreadPool.ThreadCount,
-            AvailableWorkerThreads = workerThreads,
-            IoThreadCount = Environment.ProcessorCount,
-            AvailableIoThreads = ioThreads,
-            QueuedWorkItemCount = queuedItems,
-            CompletedWorkItemCount = completedItems,
-            MinWorkerThreads = minWorkerThreads,
-            MaxWorkerThreads = maxWorkerThreads,
-            CollectedAt = DateTimeOffset.UtcNow
-        };
+            if (_isBackground || now - _lastTpSampleAt < _currentSamplingInterval)
+            {
+                return new ValueTask<ThreadPoolStats>(_lastTp);
+            }
 
-        return new ValueTask<ThreadPoolStats>(result);
+            ThreadPool.GetAvailableThreads(out int workerThreads, out int ioThreads);
+            ThreadPool.GetMinThreads(out int minWorkerThreads, out int minIoThreads);
+            ThreadPool.GetMaxThreads(out int maxWorkerThreads, out int maxIoThreads);
+
+            var queuedItems = RuntimeCounters.Instance.ThreadPoolQueueLength;
+            var completedItems = RuntimeCounters.Instance.ThreadPoolCompletedItemsCount;
+
+            _lastTp = new ThreadPoolStats
+            {
+                WorkerThreadCount = ThreadPool.ThreadCount,
+                AvailableWorkerThreads = workerThreads,
+                IoThreadCount = Environment.ProcessorCount,
+                AvailableIoThreads = ioThreads,
+                QueuedWorkItemCount = queuedItems,
+                CompletedWorkItemCount = completedItems,
+                MinWorkerThreads = minWorkerThreads,
+                MaxWorkerThreads = maxWorkerThreads,
+                CollectedAt = now
+            };
+            _lastTpSampleAt = now;
+            return new ValueTask<ThreadPoolStats>(_lastTp);
+        }
+    }
+
+    // Sampling controls for mobile scenarios
+    public void SetSamplingInterval(TimeSpan interval)
+    {
+        if (interval <= TimeSpan.Zero)
+        {
+            interval = TimeSpan.FromMilliseconds(1);
+        }
+        lock (_sync)
+        {
+            _baseSamplingInterval = interval;
+            _currentSamplingInterval = _isBackground ? TimeSpan.FromMilliseconds(Math.Min(interval.TotalMilliseconds * 4, MaxBackoff.TotalMilliseconds)) : interval;
+        }
+    }
+
+    public void OnAppForegrounded()
+    {
+        lock (_sync)
+        {
+            _isBackground = false;
+            _currentSamplingInterval = _baseSamplingInterval;
+            _lowActivityStreak = 0;
+        }
+    }
+
+    public void OnAppBackgrounded()
+    {
+        lock (_sync)
+        {
+            _isBackground = true;
+            // Immediately back off to preserve battery; will expand further based on activity.
+            _currentSamplingInterval = TimeSpan.FromMilliseconds(Math.Min(_baseSamplingInterval.TotalMilliseconds * 4, MaxBackoff.TotalMilliseconds));
+        }
     }
 
     private static bool TryReadCpuSample(out long idleTicks, out long totalTicks)

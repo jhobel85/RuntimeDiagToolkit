@@ -283,6 +283,13 @@ UseCases:
 		```
 - Targets: net8.0-android, net8.0-ios, net8.0-maccatalyst
 
+### Mobile Sampling Controls
+
+- Android and Apple providers expose sampling controls for battery-friendly telemetry:
+	- Foreground/background: call `OnAppForegrounded()` and `OnAppBackgrounded()` to pause or throttle sampling when app moves state.
+	- Sampling interval: `SetSamplingInterval(TimeSpan.FromMilliseconds(250))` configures the base cadence; Android adapts with exponential backoff while backgrounded (up to ~5s) and resets on foreground.
+	- Providers return the last cached snapshot when sampling is paused or within the configured interval, avoiding unnecessary work.
+
 ## Benchmarking
 
 ### Performance Metrics

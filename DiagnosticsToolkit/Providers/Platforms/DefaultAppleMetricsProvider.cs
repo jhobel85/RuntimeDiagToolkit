@@ -18,6 +18,20 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
     private readonly Process _currentProcess;
     private DateTime _lastCpuSampleTime;
     private TimeSpan _lastTotalProcessorTime;
+    private readonly object _sync = new();
+
+    private TimeSpan _samplingInterval = TimeSpan.FromMilliseconds(250);
+    private bool _isBackground;
+
+    private DateTimeOffset _lastCpuSampleAt;
+    private DateTimeOffset _lastMemSampleAt;
+    private DateTimeOffset _lastGcSampleAt;
+    private DateTimeOffset _lastTpSampleAt;
+
+    private CpuUsage _lastCpu;
+    private MemorySnapshot _lastMem;
+    private GcStats _lastGc;
+    private ThreadPoolStats _lastTp;
 
     public DefaultAppleMetricsProvider()
     {
@@ -25,47 +39,69 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         _lastCpuSampleTime = DateTime.UtcNow;
         _lastTotalProcessorTime = _currentProcess.TotalProcessorTime;
         _ = RuntimeCounters.Instance; // ensure runtime counters listener is initialized
+        var now = DateTimeOffset.UtcNow;
+        _lastCpuSampleAt = now;
+        _lastMemSampleAt = now;
+        _lastGcSampleAt = now;
+        _lastTpSampleAt = now;
     }
 
     public ValueTask<CpuUsage> GetCpuUsageAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
-        var totalProcessorTime = _currentProcess.TotalProcessorTime;
-        var cpuTimeDelta = totalProcessorTime - _lastTotalProcessorTime;
-        var wallTimeDelta = now - _lastCpuSampleTime;
-
-        _lastCpuSampleTime = now;
-        _lastTotalProcessorTime = totalProcessorTime;
-
-        double cpuUsagePercent = 0;
-        if (wallTimeDelta.TotalMilliseconds > 0)
+        var now = DateTimeOffset.UtcNow;
+        lock (_sync)
         {
-            cpuUsagePercent = (cpuTimeDelta.TotalMilliseconds / (wallTimeDelta.TotalMilliseconds * Environment.ProcessorCount)) * 100.0;
+            if (_isBackground || now - _lastCpuSampleAt < _samplingInterval)
+            {
+                return new ValueTask<CpuUsage>(_lastCpu);
+            }
+
+            var wallNow = DateTime.UtcNow;
+            var totalProcessorTime = _currentProcess.TotalProcessorTime;
+            var cpuTimeDelta = totalProcessorTime - _lastTotalProcessorTime;
+            var wallTimeDelta = wallNow - _lastCpuSampleTime;
+
+            _lastCpuSampleTime = wallNow;
+            _lastTotalProcessorTime = totalProcessorTime;
+
+            double cpuUsagePercent = 0;
+            if (wallTimeDelta.TotalMilliseconds > 0)
+            {
+                cpuUsagePercent = (cpuTimeDelta.TotalMilliseconds / (wallTimeDelta.TotalMilliseconds * Environment.ProcessorCount)) * 100.0;
+            }
+            cpuUsagePercent = Math.Clamp(cpuUsagePercent, 0, 100);
+
+            _lastCpu = new CpuUsage
+            {
+                PercentageUsed = cpuUsagePercent,
+                TotalProcessorTimeMs = (long)totalProcessorTime.TotalMilliseconds,
+                UserModeTimeMs = (long)_currentProcess.UserProcessorTime.TotalMilliseconds,
+                KernelModeTimeMs = (long)_currentProcess.PrivilegedProcessorTime.TotalMilliseconds,
+                ProcessorCount = Environment.ProcessorCount,
+                CollectedAt = now
+            };
+            _lastCpuSampleAt = now;
+            return new ValueTask<CpuUsage>(_lastCpu);
         }
-        cpuUsagePercent = Math.Clamp(cpuUsagePercent, 0, 100);
-
-        var result = new CpuUsage
-        {
-            PercentageUsed = cpuUsagePercent,
-            TotalProcessorTimeMs = (long)totalProcessorTime.TotalMilliseconds,
-            UserModeTimeMs = (long)_currentProcess.UserProcessorTime.TotalMilliseconds,
-            KernelModeTimeMs = (long)_currentProcess.PrivilegedProcessorTime.TotalMilliseconds,
-            ProcessorCount = Environment.ProcessorCount,
-            CollectedAt = DateTimeOffset.UtcNow
-        };
-
-        return new ValueTask<CpuUsage>(result);
     }
 
 //Pressure is computed as used/total from VM stats; if sysctl totals are missing, it falls back to total derived from VM page counts.
     public ValueTask<MemorySnapshot> GetMemorySnapshotAsync(CancellationToken cancellationToken = default)
     {
-        _currentProcess.Refresh();
+        var now = DateTimeOffset.UtcNow;
+        lock (_sync)
+        {
+            if (_isBackground || now - _lastMemSampleAt < _samplingInterval)
+            {
+                return new ValueTask<MemorySnapshot>(_lastMem);
+            }
 
-        var gcTotal = GC.GetTotalMemory(false);
+            _currentProcess.Refresh();
 
-        long totalSystem = 0;
-        long availableSystem = 0;
+            var gcTotal = GC.GetTotalMemory(false);
+
+            long totalSystem = 0;
+            long availableSystem = 0;
 
 #if NET8_0 || NET8_0_MACCATALYST || NET8_0_IOS
         // Prefer native counters for total/available memory.
@@ -81,76 +117,124 @@ public sealed class DefaultAppleMetricsProvider : IRuntimeMetricsProvider
         }
 #endif
 
-        // Compute a simple pressure percentage when totals are known.
-        int pressurePct = 0;
-        if (totalSystem > 0 && availableSystem >= 0)
-        {
-            var used = totalSystem - availableSystem;
-            pressurePct = (int)Math.Clamp((double)used / totalSystem * 100.0, 0, 100);
+            // Compute a simple pressure percentage when totals are known.
+            int pressurePct = 0;
+            if (totalSystem > 0 && availableSystem >= 0)
+            {
+                var used = totalSystem - availableSystem;
+                pressurePct = (int)Math.Clamp((double)used / totalSystem * 100.0, 0, 100);
+            }
+
+            _lastMem = new MemorySnapshot
+            {
+                TotalSystemMemoryBytes = totalSystem,
+                AvailableSystemMemoryBytes = availableSystem,
+                ProcessWorkingSetBytes = _currentProcess.WorkingSet64,
+                ProcessPrivateMemoryBytes = _currentProcess.PrivateMemorySize64,
+                ManagedHeapBytes = gcTotal,
+                ProcessVirtualMemoryBytes = _currentProcess.VirtualMemorySize64,
+                MemoryPressurePercentage = pressurePct,
+                CollectedAt = now
+            };
+            _lastMemSampleAt = now;
+            return new ValueTask<MemorySnapshot>(_lastMem);
         }
-
-        var result = new MemorySnapshot
-        {
-            TotalSystemMemoryBytes = totalSystem,
-            AvailableSystemMemoryBytes = availableSystem,
-            ProcessWorkingSetBytes = _currentProcess.WorkingSet64,
-            ProcessPrivateMemoryBytes = _currentProcess.PrivateMemorySize64,
-            ManagedHeapBytes = gcTotal,
-            ProcessVirtualMemoryBytes = _currentProcess.VirtualMemorySize64,
-            MemoryPressurePercentage = pressurePct,
-            CollectedAt = DateTimeOffset.UtcNow
-        };
-
-        return new ValueTask<MemorySnapshot>(result);
     }
 
     public ValueTask<GcStats> GetGcStatsAsync(CancellationToken cancellationToken = default)
     {
-        var mem = GC.GetGCMemoryInfo();
-        double fragmentationPct = 0;
-        if (mem.HeapSizeBytes > 0 && mem.FragmentedBytes >= 0)
+        var now = DateTimeOffset.UtcNow;
+        lock (_sync)
         {
-            fragmentationPct = (double)mem.FragmentedBytes / mem.HeapSizeBytes * 100.0;
+            if (_isBackground || now - _lastGcSampleAt < _samplingInterval)
+            {
+                return new ValueTask<GcStats>(_lastGc);
+            }
+
+            var mem = GC.GetGCMemoryInfo();
+            double fragmentationPct = 0;
+            if (mem.HeapSizeBytes > 0 && mem.FragmentedBytes >= 0)
+            {
+                fragmentationPct = (double)mem.FragmentedBytes / mem.HeapSizeBytes * 100.0;
+            }
+
+            _lastGc = new GcStats
+            {
+                Gen0CollectionCount = GC.CollectionCount(0),
+                Gen1CollectionCount = GC.CollectionCount(1),
+                Gen2CollectionCount = GC.CollectionCount(2),
+                TotalGcPauseMsPercentage = RuntimeCounters.Instance.TimeInGcPercent,
+                HeapFragmentationPercentage = fragmentationPct,
+                TotalAllocatedBytes = GC.GetTotalAllocatedBytes(),
+                IsGcConcurrentEnabled = !GCSettings.IsServerGC,
+                CollectedAt = now
+            };
+            _lastGcSampleAt = now;
+            return new ValueTask<GcStats>(_lastGc);
         }
-
-        var result = new GcStats
-        {
-            Gen0CollectionCount = GC.CollectionCount(0),
-            Gen1CollectionCount = GC.CollectionCount(1),
-            Gen2CollectionCount = GC.CollectionCount(2),
-            TotalGcPauseMsPercentage = RuntimeCounters.Instance.TimeInGcPercent,
-            HeapFragmentationPercentage = fragmentationPct,
-            TotalAllocatedBytes = GC.GetTotalAllocatedBytes(),
-            IsGcConcurrentEnabled = !GCSettings.IsServerGC,
-            CollectedAt = DateTimeOffset.UtcNow
-        };
-
-        return new ValueTask<GcStats>(result);
     }
 
     public ValueTask<ThreadPoolStats> GetThreadPoolStatsAsync(CancellationToken cancellationToken = default)
     {
-        ThreadPool.GetAvailableThreads(out int workerThreads, out int ioThreads);
-        ThreadPool.GetMinThreads(out int minWorkerThreads, out int minIoThreads);
-        ThreadPool.GetMaxThreads(out int maxWorkerThreads, out int maxIoThreads);
-
-        var queuedItems = RuntimeCounters.Instance.ThreadPoolQueueLength;
-        var completedItems = RuntimeCounters.Instance.ThreadPoolCompletedItemsCount;
-
-        var result = new ThreadPoolStats
+        var now = DateTimeOffset.UtcNow;
+        lock (_sync)
         {
-            WorkerThreadCount = ThreadPool.ThreadCount,
-            AvailableWorkerThreads = workerThreads,
-            IoThreadCount = Environment.ProcessorCount,
-            AvailableIoThreads = ioThreads,
-            QueuedWorkItemCount = queuedItems,
-            CompletedWorkItemCount = completedItems,
-            MinWorkerThreads = minWorkerThreads,
-            MaxWorkerThreads = maxWorkerThreads,
-            CollectedAt = DateTimeOffset.UtcNow
-        };
+            if (_isBackground || now - _lastTpSampleAt < _samplingInterval)
+            {
+                return new ValueTask<ThreadPoolStats>(_lastTp);
+            }
 
-        return new ValueTask<ThreadPoolStats>(result);
+            ThreadPool.GetAvailableThreads(out int workerThreads, out int ioThreads);
+            ThreadPool.GetMinThreads(out int minWorkerThreads, out int minIoThreads);
+            ThreadPool.GetMaxThreads(out int maxWorkerThreads, out int maxIoThreads);
+
+            var queuedItems = RuntimeCounters.Instance.ThreadPoolQueueLength;
+            var completedItems = RuntimeCounters.Instance.ThreadPoolCompletedItemsCount;
+
+            _lastTp = new ThreadPoolStats
+            {
+                WorkerThreadCount = ThreadPool.ThreadCount,
+                AvailableWorkerThreads = workerThreads,
+                IoThreadCount = Environment.ProcessorCount,
+                AvailableIoThreads = ioThreads,
+                QueuedWorkItemCount = queuedItems,
+                CompletedWorkItemCount = completedItems,
+                MinWorkerThreads = minWorkerThreads,
+                MaxWorkerThreads = maxWorkerThreads,
+                CollectedAt = now
+            };
+            _lastTpSampleAt = now;
+            return new ValueTask<ThreadPoolStats>(_lastTp);
+        }
+    }
+
+    // Sampling controls for mobile scenarios
+    public void SetSamplingInterval(TimeSpan interval)
+    {
+        if (interval <= TimeSpan.Zero)
+        {
+            interval = TimeSpan.FromMilliseconds(1);
+        }
+        lock (_sync)
+        {
+            _samplingInterval = interval;
+        }
+    }
+
+    public void OnAppForegrounded()
+    {
+        lock (_sync)
+        {
+            _isBackground = false;
+        }
+    }
+
+    public void OnAppBackgrounded()
+    {
+        lock (_sync)
+        {
+            _isBackground = true;
+        }
     }
 
     private static bool TryGetTotalMemoryBytes(out long totalBytes)
