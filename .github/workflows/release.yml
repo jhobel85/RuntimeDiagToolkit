@@ -111,7 +111,7 @@ jobs:
         working-directory: DiagnosticsToolkit.Maui
         run: |
           mkdir -p ../nupkg-maui
-          dotnet pack DiagnosticsToolkit.Maui.csproj -p:TargetFrameworks=net10.0-android -c Release -o ../../nupkg-maui --no-build
+          dotnet pack DiagnosticsToolkit.Maui.csproj -p:TargetFrameworks=net10.0-android -c Release -o ../nupkg-maui --no-build
 
       - name: Push MAUI to GitHub Packages
         run: |
