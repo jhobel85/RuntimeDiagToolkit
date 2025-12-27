@@ -1,0 +1,10 @@
+{
+  "CpuUsage": 30814.18,
+  "MemorySnapshot": 4381964.38,
+  "GcStats": 120.67,
+  "ThreadPoolStats": 80.54,
+  "CpuUsageAsync": 30814.18,
+  "MemorySnapshotAsync": 4381964.38,
+  "GcStatsAsync": 120.67,
+  "ThreadPoolStatsAsync": 80.54
+}

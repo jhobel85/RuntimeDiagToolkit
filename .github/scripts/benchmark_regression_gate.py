@@ -13,7 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description="Compare benchmark results against baseline")
     parser.add_argument("--results", required=True, help="Path to benchmark results JSON file")
     parser.add_argument("--baseline", default="benchmark-baselines.json", help="Path to baseline JSON file")
-    parser.add_argument("--threshold", type=float, default=0.10, help="Regression threshold (default 10%)")
+    parser.add_argument("--threshold", type=float, default=0.10, help="Regression threshold (default 10 percent)")
     args = parser.parse_args()
 
     results_file = args.results
@@ -21,14 +21,14 @@ def main():
     regression_threshold = args.threshold
 
     if not os.path.exists(results_file):
-        print(f"❌ Benchmark results file not found: {results_file}")
+        print(f"Benchmark results file not found: {results_file}")
         return 1
 
     try:
         with open(results_file) as f:
             results = json.load(f)
     except Exception as e:
-        print(f"❌ Failed to load results: {e}")
+        print(f"Failed to load results: {e}")
         return 1
 
     # Load baseline if it exists
@@ -38,7 +38,7 @@ def main():
             with open(baseline_file) as f:
                 baseline = json.load(f)
         except Exception as e:
-            print(f"⚠️  Warning: Could not load baseline: {e}")
+            print(f"Warning: Could not load baseline: {e}")
 
     regressions = []
     improvements = []
@@ -78,7 +78,7 @@ def main():
     print("="*70)
 
     if improvements:
-        print("\n✓ Improvements/Within Threshold:")
+        print("\nImprovements/Within Threshold:")
         for msg in improvements:
             print(f"  {msg}")
 
@@ -88,13 +88,13 @@ def main():
             print(f"  {msg}")
 
     if regressions:
-        print("\n❌ REGRESSIONS DETECTED (> {:.0f}% threshold):".format(regression_threshold * 100))
+        print("\nREGRESSIONS DETECTED (> {:.0f}% threshold):".format(regression_threshold * 100))
         for msg in regressions:
             print(f"  {msg}")
         print("\n" + "="*70)
         return 1
 
-    print("\n✓ All benchmarks within acceptable threshold")
+    print("\nAll benchmarks within acceptable threshold")
     print("="*70 + "\n")
     return 0
 

@@ -46,15 +46,35 @@ jobs:
         dotnet run --project DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj --configuration Release --framework net8.0-windows -- --exportjson benchmark-results-${{ matrix.os }}.json
         echo "Benchmark completed for ${{ matrix.os }}"
 
+    - name: Collect Benchmark JSON (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        $json = Get-ChildItem -Path DiagnosticsToolkit.Benchmarks/BenchmarkDotNet.Artifacts/results -Filter *.json -File | Select-Object -First 1
+        if ($json) { Copy-Item $json.FullName -Destination "benchmark-results-${{ matrix.os }}.json" } else { Write-Host "No JSON found" }
+
     - name: Run Benchmarks (Release, Non-Windows)
       if: matrix.os != 'windows-latest'
       run: |
         dotnet run --project DiagnosticsToolkit.Benchmarks/DiagnosticsToolkit.Benchmarks.csproj --configuration Release --framework net8.0 -- --exportjson benchmark-results-${{ matrix.os }}.json
         echo "Benchmark completed for ${{ matrix.os }}"
 
+    - name: Collect Benchmark JSON (Non-Windows)
+      if: matrix.os != 'windows-latest'
+      shell: bash
+      run: |
+        JSON=$(ls DiagnosticsToolkit.Benchmarks/BenchmarkDotNet.Artifacts/results/*.json | head -n 1 || true)
+        if [ -f "$JSON" ]; then cp "$JSON" "benchmark-results-${{ matrix.os }}.json"; else echo "No JSON found"; fi
+
     - name: Compare Benchmarks Against Baseline
       if: always()
-      run: python3 .github/scripts/benchmark_regression_gate.py --results benchmark-results-${{ matrix.os }}.json --baseline benchmark-baselines.json --threshold 0.10
+      shell: bash
+      run: |
+        BASELINE=benchmark-baselines-${{ matrix.os }}.json
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then BASELINE=benchmark-baselines-windows.json; fi
+        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then BASELINE=benchmark-baselines-ubuntu.json; fi
+        if [ "${{ matrix.os }}" = "macos-latest" ]; then BASELINE=benchmark-baselines-macos.json; fi
+        python3 .github/scripts/benchmark_regression_gate.py --results benchmark-results-${{ matrix.os }}.json --baseline "$BASELINE" --threshold 0.10
 
     - name: Upload Benchmark Results
       if: always()
@@ -93,10 +113,14 @@ jobs:
       with:
         global-json-file: DiagnosticsToolkit.Maui.Sample/global.json
 
-    - name: Install MAUI workloads (iOS, MacCatalyst, Android)
+    - name: Install MAUI workloads (meta)
       run: |
-        dotnet workload install ios maccatalyst android
+        dotnet workload install maui
         dotnet workload restore
+
+    - name: Restore MAUI workloads for sample
+      working-directory: DiagnosticsToolkit.Maui.Sample
+      run: dotnet workload restore
 
     - name: Restore MAUI sample
       working-directory: DiagnosticsToolkit.Maui.Sample

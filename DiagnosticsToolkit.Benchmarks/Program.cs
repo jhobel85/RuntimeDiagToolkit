@@ -1,11 +1,14 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Exporters;
+using BenchmarkDotNet.Exporters.Json;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using DiagnosticsToolkit.Providers;
 
 var config = ManualConfig.Create(DefaultConfig.Instance)
-	.AddJob(Job.ShortRun.WithWarmupCount(1).WithIterationCount(5));
+	.AddJob(Job.ShortRun.WithWarmupCount(1).WithIterationCount(5))
+	.AddExporter(JsonExporter.Full);
 
 BenchmarkRunner.Run<RuntimeMetricsBenchmarks>(config);
 
