@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="DiagnosticsToolkit.Maui.Sample.MainPage"
+             Title="Runtime Diagnostics">
+  <ScrollView>
+    <VerticalStackLayout Spacing="12" Padding="16">
+      <Label Text="Diagnostics Toolkit (MAUI)" FontAttributes="Bold" FontSize="20" />
+
+      <HorizontalStackLayout Spacing="8">
+        <Button Text="CPU" Clicked="OnCpuClicked" />
+        <Button Text="Memory" Clicked="OnMemClicked" />
+        <Button Text="GC" Clicked="OnGcClicked" />
+        <Button Text="ThreadPool" Clicked="OnTpClicked" />
+      </HorizontalStackLayout>
+
+      <Label Text="Output:" FontAttributes="Bold" />
+      <Editor x:Name="Output" AutoSize="TextChanges" IsReadOnly="True" HeightRequest="400" />
+    </VerticalStackLayout>
+  </ScrollView>
+</ContentPage>

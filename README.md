@@ -278,7 +278,8 @@ UseCases:
 		var builder = MauiApp.CreateBuilder();
 		builder
 		    .UseMauiApp<App>()
-		    .UseDiagnosticsToolkit();
+				//Optional: Base interval while app is foreground; Android adapts in background 
+			.UseDiagnosticsToolkit(o => o.BaseInterval = TimeSpan.FromMilliseconds(250));
 		return builder.Build();
 		```
 - Targets: net8.0-android, net8.0-ios, net8.0-maccatalyst
@@ -289,6 +290,37 @@ UseCases:
 	- Foreground/background: call `OnAppForegrounded()` and `OnAppBackgrounded()` to pause or throttle sampling when app moves state.
 	- Sampling interval: `SetSamplingInterval(TimeSpan.FromMilliseconds(250))` configures the base cadence; Android adapts with exponential backoff while backgrounded (up to ~5s) and resets on foreground.
 	- Providers return the last cached snapshot when sampling is paused or within the configured interval, avoiding unnecessary work.
+
+- Lifecycle events are hooked automatically:
+	- Android: Foreground on Start/Resume, background on Pause/Stop
+	- iOS/Mac Catalyst: Foreground on WillEnterForeground/Activated, background on DidEnterBackground/ResignActivation
+
+
+### MAUI Sample App
+
+- Project: [DiagnosticsToolkit.Maui.Sample](DiagnosticsToolkit.Maui.Sample/)
+- Run (requires MAUI workloads):
+	- Install workloads once:
+		```bash
+		dotnet workload restore
+		```
+	- Android emulator/device:
+		```bash
+		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net8.0-android -c Debug
+		```
+	- iOS (on macOS):
+		```bash
+		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net8.0-ios -c Debug
+		```
+	- Mac Catalyst:
+		```bash
+		dotnet build DiagnosticsToolkit.Maui.Sample/DiagnosticsToolkit.Maui.Sample.csproj -f net8.0-maccatalyst -c Debug
+		```
+
+The sample demonstrates:
+- Lifecycle-driven sampling throttling
+- Configurable base interval via `UseDiagnosticsToolkit(o => o.BaseInterval = TimeSpan.FromMilliseconds(250))`
+- Buttons to fetch CPU, Memory, GC, and ThreadPool metrics and display results
 
 ## Benchmarking
 
