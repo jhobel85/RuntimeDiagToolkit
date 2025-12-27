@@ -72,3 +72,10 @@ Console.WriteLine($"   Average Time:    {transformMetrics.AverageExecutionTimeMs
 
 Console.WriteLine();
 Console.WriteLine("✨ Source generator automatically tracked all metrics!");
+
+// ═══════════════════════════════════════════════════════════════════
+// PART 2: Runtime Diagnostics Metrics Collection
+// ═══════════════════════════════════════════════════════════════════
+Console.WriteLine();
+Console.WriteLine();
+await RuntimeMetricsExample.DemonstrateUsageAsync();

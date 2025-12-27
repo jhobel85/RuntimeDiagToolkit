@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DiagnosticsToolkit.Generators\DiagnosticsToolkit.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\DiagnosticsToolkit\DiagnosticsToolkit.csproj" />
   </ItemGroup>
 
   <ItemGroup>
