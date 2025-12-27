@@ -65,36 +65,56 @@ jobs:
           path: ./nupkg/
           retention-days: 30
 
-  # maui-packages:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - name: Setup .NET (10, prerelease for MAUI Android)
-  #       uses: actions/setup-dotnet@v4
-  #       with:
-  #         dotnet-version: '10.0.x'
-  #     - name: Install MAUI workloads
-  #       run: |
-  #         dotnet workload install maui android
-  #     - name: Restore MAUI
-  #       run: |
-  #         dotnet restore DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj
-  #     - name: Build MAUI
-  #       run: |
-  #         dotnet build DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj --configuration Release --no-restore
-  #     - name: Pack MAUI
-  #       run: |
-  #         mkdir -p ./nupkg-maui
-  #         dotnet pack DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj -c Release -o ./nupkg-maui
-  #     - name: Push MAUI to GitHub Packages
-  #       run: |
-  #         dotnet nuget push ./nupkg-maui/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
-  #       continue-on-error: true
-  #     - name: Upload MAUI artifacts
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: nupkg-maui
-  #         path: ./nupkg-maui/
-  #         retention-days: 30
+  maui-packages:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10 for MAUI (from local global.json)
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: DiagnosticsToolkit.Maui/global.json
+
+      - name: Install MAUI workloads (meta)
+        run: |
+          dotnet workload install maui
+          dotnet workload restore
+
+      - name: Restore MAUI workloads for sample
+        working-directory: DiagnosticsToolkit.Maui.Sample
+        run: dotnet workload restore
+
+      - name: Restore MAUI sample
+        working-directory: DiagnosticsToolkit.Maui.Sample
+        run: dotnet restore DiagnosticsToolkit.Maui.Sample.csproj
+
+      - name: Restore MAUI library
+        working-directory: DiagnosticsToolkit.Maui
+        run: dotnet restore DiagnosticsToolkit.Maui.csproj
+
+      - name: Build MAUI sample (Android)
+        working-directory: DiagnosticsToolkit.Maui.Sample
+        run: dotnet build DiagnosticsToolkit.Maui.Sample.csproj -f net10.0-android -c Release --no-restore
+
+      - name: Build MAUI library (Android)
+        working-directory: DiagnosticsToolkit.Maui
+        run: dotnet build DiagnosticsToolkit.Maui.csproj -f net10.0-android -c Release --no-restore
+
+      - name: Pack MAUI library
+        run: |
+          mkdir -p ./nupkg-maui
+          dotnet pack DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj -c Release -o ./nupkg-maui
+
+      - name: Push MAUI to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkg-maui/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+        continue-on-error: true
+
+      - name: Upload MAUI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg-maui
+          path: ./nupkg-maui/
+          retention-days: 30
