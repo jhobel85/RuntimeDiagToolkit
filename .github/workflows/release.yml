@@ -104,9 +104,10 @@ jobs:
         run: dotnet build DiagnosticsToolkit.Maui.csproj -f net10.0-android -c Release --no-restore
 
       - name: Pack MAUI library
+        working-directory: DiagnosticsToolkit.Maui
         run: |
-          mkdir -p ./nupkg-maui
-          dotnet pack DiagnosticsToolkit.Maui/DiagnosticsToolkit.Maui.csproj -c Release -o ./nupkg-maui
+          mkdir -p ../../nupkg-maui
+          dotnet pack DiagnosticsToolkit.Maui.csproj -c Release -o ../../nupkg-maui --no-restore
 
       - name: Push MAUI to GitHub Packages
         run: |
