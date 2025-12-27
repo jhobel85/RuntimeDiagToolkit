@@ -1,4 +1,5 @@
 using DiagnosticsToolkit.Maui.Extensions;
+using DiagnosticsToolkit.Maui.Sample.ViewModels;
 using Microsoft.Extensions.Logging;
 
 namespace DiagnosticsToolkit.Maui.Sample;
@@ -18,7 +19,8 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        // Pages
+        // Pages & ViewModels
+        builder.Services.AddSingleton<DiagnosticsViewModel>();
         builder.Services.AddSingleton<MainPage>();
 
         return builder.Build();

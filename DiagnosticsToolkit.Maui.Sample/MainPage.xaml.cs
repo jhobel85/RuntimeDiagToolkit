@@ -1,5 +1,6 @@
 using DiagnosticsToolkit.Models;
 using DiagnosticsToolkit.Providers;
+using DiagnosticsToolkit.Maui.Sample.ViewModels;
 
 namespace DiagnosticsToolkit.Maui.Sample;
 
@@ -7,10 +8,11 @@ public partial class MainPage : ContentPage
 {
     private readonly IRuntimeMetricsProvider _metrics;
 
-    public MainPage(IRuntimeMetricsProvider metrics)
+    public MainPage(IRuntimeMetricsProvider metrics, DiagnosticsViewModel vm)
     {
         InitializeComponent();
         _metrics = metrics;
+        BindingContext = vm;
     }
 
     private async void OnCpuClicked(object sender, EventArgs e)

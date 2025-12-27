@@ -248,6 +248,17 @@ public sealed class DefaultAndroidMetricsProvider : IRuntimeMetricsProvider
         }
     }
 
+    // Introspection helpers for samples
+    public TimeSpan GetCurrentSamplingInterval()
+    {
+        lock (_sync)
+        {
+            return _currentSamplingInterval;
+        }
+    }
+
+    public bool IsBackground => _isBackground;
+
     private static bool TryReadCpuSample(out long idleTicks, out long totalTicks)
     {
         idleTicks = 0;

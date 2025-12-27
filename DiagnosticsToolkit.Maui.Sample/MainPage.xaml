@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:DiagnosticsToolkit.Maui.Sample.ViewModels"
              x:Class="DiagnosticsToolkit.Maui.Sample.MainPage"
              Title="Runtime Diagnostics">
   <ScrollView>
     <VerticalStackLayout Spacing="12" Padding="16">
       <Label Text="Diagnostics Toolkit (MAUI)" FontAttributes="Bold" FontSize="20" />
+
+      <!-- Auto refresh controls -->
+      <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+        <Label Text="Auto Refresh" />
+        <Switch IsToggled="{Binding AutoRefresh}" />
+        <Label Text="Interval (ms)" />
+        <Slider Minimum="50" Maximum="2000" Value="{Binding RefreshIntervalMs}" WidthRequest="200" />
+        <Label Text="Current (Android) interval: " />
+        <Label Text="{Binding CurrentSamplingIntervalMs, StringFormat='{}{0:F0} ms'}" />
+      </HorizontalStackLayout>
+
+      <!-- Background simulation -->
+      <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+        <Label Text="Simulate Background" />
+        <Switch IsToggled="{Binding IsBackground}" />
+      </HorizontalStackLayout>
 
       <HorizontalStackLayout Spacing="8">
         <Button Text="CPU" Clicked="OnCpuClicked" />
@@ -14,8 +31,14 @@
         <Button Text="ThreadPool" Clicked="OnTpClicked" />
       </HorizontalStackLayout>
 
-      <Label Text="Output:" FontAttributes="Bold" />
-      <Editor x:Name="Output" AutoSize="TextChanges" IsReadOnly="True" HeightRequest="400" />
+      <Label Text="Auto Output:" FontAttributes="Bold" />
+      <Label Text="{Binding CpuText}" />
+      <Label Text="{Binding MemText}" />
+      <Label Text="{Binding GcText}" />
+      <Label Text="{Binding TpText}" />
+
+      <Label Text="Manual Output:" FontAttributes="Bold" />
+      <Editor x:Name="Output" AutoSize="TextChanges" IsReadOnly="True" HeightRequest="200" />
     </VerticalStackLayout>
   </ScrollView>
 </ContentPage>
