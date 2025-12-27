@@ -7,12 +7,39 @@ namespace DiagnosticsToolkit.Maui.Sample;
 public partial class MainPage : ContentPage
 {
     private readonly IRuntimeMetricsProvider _metrics;
+    private readonly DiagnosticsViewModel _vm;
+    private bool _isRunning = true;
 
     public MainPage(IRuntimeMetricsProvider metrics, DiagnosticsViewModel vm)
     {
         InitializeComponent();
         _metrics = metrics;
+        _vm = vm;
         BindingContext = vm;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        // Auto-start periodic refresh
+        _isRunning = true;
+        _vm.AutoRefresh = true;
+        PauseButton.Text = "Pause";
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        // Stop refresh when page closes
+        _vm.AutoRefresh = false;
+        _isRunning = false;
+    }
+
+    private void OnTogglePause(object sender, EventArgs e)
+    {
+        _isRunning = !_isRunning;
+        _vm.AutoRefresh = _isRunning;
+        PauseButton.Text = _isRunning ? "Pause" : "Resume";
     }
 
     private async void OnCpuClicked(object sender, EventArgs e)

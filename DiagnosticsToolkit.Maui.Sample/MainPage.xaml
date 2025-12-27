@@ -4,6 +4,9 @@
              xmlns:vm="clr-namespace:DiagnosticsToolkit.Maui.Sample.ViewModels"
              x:Class="DiagnosticsToolkit.Maui.Sample.MainPage"
              Title="Runtime Diagnostics">
+  <ContentPage.ToolbarItems>
+    <ToolbarItem Text="Pause" x:Name="PauseButton" Clicked="OnTogglePause" />
+  </ContentPage.ToolbarItems>
   <ScrollView>
     <VerticalStackLayout Spacing="12" Padding="16">
       <Label Text="Diagnostics Toolkit (MAUI)" FontAttributes="Bold" FontSize="20" />
