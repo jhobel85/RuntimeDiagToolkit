@@ -15,7 +15,7 @@ jobs:
 
       - name: Extract version from tag
         if: startsWith(github.ref, 'refs/tags/v')
-        run: echo "env.PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+        run: echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -44,10 +44,10 @@ jobs:
       - name: Pack NuGet packages (non-MAUI)
         run: |
           mkdir -p ./nupkg
-          dotnet pack DiagnosticsToolkit/DiagnosticsToolkit.csproj -c Release -o ./nupkg -p:PackageVersion=${env.PACKAGE_VERSION}
-          dotnet pack DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj -c Release -o ./nupkg -p:PackageVersion=${env.PACKAGE_VERSION}
-          dotnet pack DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj -c Release -o ./nupkg -p:PackageVersion=${env.PACKAGE_VERSION}
-          dotnet pack DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj -c Release -o ./nupkg -p:PackageVersion=${env.PACKAGE_VERSION}
+          dotnet pack DiagnosticsToolkit/DiagnosticsToolkit.csproj -c Release -o ./nupkg -p:PackageVersion=$PACKAGE_VERSION
+          dotnet pack DiagnosticsToolkit.AspNetCore/DiagnosticsToolkit.AspNetCore.csproj -c Release -o ./nupkg -p:PackageVersion=$PACKAGE_VERSION
+          dotnet pack DiagnosticsToolkit.Generators/DiagnosticsToolkit.Generators.csproj -c Release -o ./nupkg -p:PackageVersion=$PACKAGE_VERSION
+          dotnet pack DiagnosticsToolkit.Cli/DiagnosticsToolkit.Cli.csproj -c Release -o ./nupkg -p:PackageVersion=$PACKAGE_VERSION
 
       - name: Push to GitHub Packages
         run: |
@@ -106,7 +106,7 @@ jobs:
         working-directory: DiagnosticsToolkit.Maui
         run: |
           mkdir -p ../nupkg-maui
-          dotnet pack DiagnosticsToolkit.Maui.csproj -p:TargetFrameworks=net10.0-android -c Release -o ../nupkg-maui --no-build -p:PackageVersion=${env.PACKAGE_VERSION}
+          dotnet pack DiagnosticsToolkit.Maui.csproj -p:TargetFrameworks=net10.0-android -c Release -o ../nupkg-maui --no-build -p:PackageVersion=$PACKAGE_VERSION
 
       - name: Push MAUI to GitHub Packages
         run: |
