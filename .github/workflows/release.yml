@@ -1,8 +1,5 @@
 name: Release to GitHub Packages
 
-permissions:
-  contents: write
-
 on:
   push:
     tags:
@@ -50,17 +47,8 @@ jobs:
 
       - name: Push to GitHub Packages
         run: |
-          dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
-        continue-on-error: true
-
-      - name: Create GitHub Release (gh CLI, inline notes)
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ github.ref_name }}" \
-          --title "Release ${{ github.ref_name }}" \
-          --notes "Automated release of version ${{ github.ref_name }}."
+          dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.GH_NUGET_PAT }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+        continue-on-error: false
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -118,8 +106,8 @@ jobs:
 
       - name: Push MAUI to GitHub Packages
         run: |
-          dotnet nuget push ./nupkg-maui/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
-        continue-on-error: true
+          dotnet nuget push ./nupkg-maui/*.nupkg --api-key ${{ secrets.GH_NUGET_PAT }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+        continue-on-error: false
 
       - name: Upload MAUI artifacts
         uses: actions/upload-artifact@v4
@@ -127,3 +115,44 @@ jobs:
           name: nupkg-maui
           path: ./nupkg-maui/
           retention-days: 30
+  release:
+    needs:
+      - core-packages
+      - maui-packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Download artifacts from both jobs
+      - name: Download core artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nupkg-core
+          path: ./artifacts/core
+
+      - name: Download MAUI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nupkg-maui
+          path: ./artifacts/maui
+
+      # 2. Create GitHub Release
+      - name: Create GitHub Release (gh CLI, inline notes)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GH_NUGET_PAT }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+          --title "Release ${{ github.ref_name }}" \
+          --notes "Automated release of version ${{ github.ref_name }}."
+      
+      # 3. Upload NuGet packages as release assets
+      - name: Upload artifacts to release
+        env:
+          GH_TOKEN: ${{ secrets.GH_NUGET_PAT }}
+        run: |
+          gh release upload "${{ github.ref_name }}" ./artifacts/core/*.nupkg
+          gh release upload "${{ github.ref_name }}" ./artifacts/maui/*.nupkg
+

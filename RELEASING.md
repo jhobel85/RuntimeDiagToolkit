@@ -176,7 +176,7 @@ dotnet add package DiagnosticsToolkit.Cli --source github
 ## Troubleshooting
 
 ### GitHub Packages Push Fails
-- secrets.GITHUB_TOKEN are auto‑generated for user jhobel85
+- secrets.GH_NUGET_PAT - must exists with package:write role
 - Verify GitHub token has `write:packages` and `read:packages` permissions
 - Check version doesn't already exist on GitHub Packages
 - Ensure all tests pass locally
