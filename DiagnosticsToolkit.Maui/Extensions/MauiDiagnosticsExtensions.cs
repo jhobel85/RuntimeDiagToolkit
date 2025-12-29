@@ -36,7 +36,7 @@ public static class MauiDiagnosticsExtensions
                 android.OnStop(activity => Background());
             });
 #endif
-#if IOS
+#if IOS || MACCATALYST
             events.AddiOS(ios =>
             {
                 ios.WillEnterForeground(app => Foreground());
@@ -45,17 +45,7 @@ public static class MauiDiagnosticsExtensions
                 ios.OnResignActivation(app => Background());
             });
 #endif
-#if MACCATALYST
-            events.AddMacCatalyst(mac =>
-            {
-                mac.WillEnterForeground(app => Foreground());
-                mac.OnActivated(app => Foreground());
-                mac.DidEnterBackground(app => Background());
-                mac.OnResignActivation(app => Background());
-            });
-#else
-    // Handle other platforms
-#endif
+            // Handle other platforms
         });
 
         return builder;
@@ -139,11 +129,9 @@ public static class MauiDiagnosticsExtensions
         static IServiceProvider? ResolveServices()
         {
 #if ANDROID
-            return Microsoft.Maui.MauiApplication.Current?.Services;
-#elif IOS
-            return Microsoft.Maui.MauiUIApplicationDelegate.Current?.Services;
-#elif MACCATALYST
-            return Microsoft.Maui.MauiUIApplicationDelegate.Current?.Services;
+            return IPlatformApplication.Current?.Services;
+#elif IOS || MACCATALYST
+            return IPlatformApplication.Current?.Services;
 #else
             // Replace obsolete references
             // Old usage

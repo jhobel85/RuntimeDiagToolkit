@@ -21,7 +21,8 @@ public static class MauiProgram
 
         // Pages & ViewModels
         builder.Services.AddSingleton<DiagnosticsViewModel>();
-        builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddTransient<MainPage>(); //Prefer a new instance is created each time it’s requested.        
+        //builder.Services.AddSingleton<MainPage>();
 
         return builder.Build();
     }
